@@ -1,0 +1,43 @@
+prog: (line EOL)+
+
+line: COMMENT -> comment
+    | code
+
+
+code: label? opcode operands
+
+label: NAME ":"
+
+opcode: OPCODE
+
+OPCODE: "mov"
+    | "add"
+    | "rnd"
+    | "jmp"
+
+operands: operand+
+
+?operand: REG_NAME  -> register_operand
+    | immediate     -> immediate_operand
+    | NAME          -> label_operand
+
+REG_NAME: "r" DIGIT
+
+immediate: IMM_BINARY -> binary
+    | IMM_HEXA        -> hexa
+    | IMM_DECI        -> decimal
+
+IMM_BINARY: "b" ("0" | "1")+
+IMM_HEXA: "h" (DIGIT | "a".."f")+
+IMM_DECI: "d" DIGIT+
+
+
+EOL: "\n"
+
+NAME: ("a".."z" | "_" | "A".."Z")+
+
+WHITESPACE: " "
+%ignore WHITESPACE
+
+%import common.DIGIT
+%import common.CPP_COMMENT -> COMMENT
