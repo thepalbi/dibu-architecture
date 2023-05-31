@@ -1,0 +1,42 @@
+start: line+
+
+line: (comment | code)  EOL
+
+comment: CPP_COMMENT
+
+code: [label] instruction
+
+label: NAME COLON
+
+instruction: opcode operands
+
+opcode: "mov"
+    | "add"
+    | "rnd"
+
+operands: operand+
+
+operand: register
+    | immediate
+
+register: REG_NAME
+REG_NAME: "r" DIGIT
+
+immediate: IMM_BINARY -> immediate_binary
+    | IMM_HEXA        -> immediate_hexa  
+
+IMM_BINARY: "b" ("0" | "1")+
+IMM_HEXA: "h" (DIGIT | "a".."f")+
+
+
+EOL: "\n"
+
+NAME: ("a".."z" | "_" | "A".."Z")+
+
+COLON: ":"
+
+WHITESPACE: " "
+%ignore WHITESPACE
+
+%import common.DIGIT
+%import common.CPP_COMMENT
