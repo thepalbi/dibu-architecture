@@ -3,7 +3,6 @@ prog: (line EOL)+
 line: COMMENT -> comment
     | code
 
-
 code: label? opcode operands
 
 label: NAME ":"
@@ -27,10 +26,9 @@ immediate: IMM_BINARY -> binary
     | IMM_HEXA        -> hexa
     | IMM_DECI        -> decimal
 
-IMM_BINARY: "b" ("0" | "1")+
-IMM_HEXA: "h" (DIGIT | "a".."f")+
-IMM_DECI: "d" DIGIT+
-
+IMM_BINARY: "0b" ("0" | "1")+
+IMM_HEXA: "0x" (DIGIT | "a".."f")+
+IMM_DECI: "0d" DIGIT+
 
 EOL: "\n"
 

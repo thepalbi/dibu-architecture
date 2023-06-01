@@ -1,5 +1,9 @@
 import unittest
 from parser import *
+import logging
+
+# logging.basicConfig(level=logging.DEBUG, format='%(name)s %(levelname)s %(message)s')
+
 
 class ParserTest(unittest.TestCase):
     def test_smoke_parse(self):
@@ -8,8 +12,17 @@ class ParserTest(unittest.TestCase):
         mov r1 r2
         loop: mov r2 r1
         rnd r1
-        mov r1 b101
+        mov r1 0b101
+        mov r1 0x100
+        mov r1 0d7
         jmp loop
         """
         prog = parse(example)
-        print(prog)
+        for instr in prog.instructions:
+            print(instr)
+
+    def test_parse_error(self):
+        example = """mov r1 0jd0129
+        """
+        with self.assertRaises(Exception) as ctx:
+            parse(example)

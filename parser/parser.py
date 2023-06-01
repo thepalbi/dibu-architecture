@@ -1,7 +1,11 @@
 from lark import Lark, Visitor, Tree, Token
 from dataclasses import dataclass
-from typing import List, Dict
+from typing import List, Dict, Tuple
 from os import path
+import logging
+from enum import Enum
+
+log = logging.getLogger(__name__)
 
 """
 DiBU parser and assambler, based in a EBNF grammar.
@@ -48,10 +52,17 @@ class ProgramVisitor(Visitor):
             labels=self._labels,
         )
 
+class OperandType(Enum):
+    REGISTER = 1
+    IMMEDIATE = 2
 
 @dataclass
 class Instruction:
     opcode: str
+    operands: List[Tuple[OperandType, any]]
+
+    def __repr__(self) -> str:
+        return "%s %s" % (self.opcode, " ".join([op[1] for op in self.operands]))
 
 
 @dataclass
@@ -62,21 +73,46 @@ class Program:
 
 class CodeLineVisitor(Visitor):
     def __init__(self) -> None:
+        self._operands = []
         super().__init__()
 
     def opcode(self, o: Tree):
         self._opcode = o.children[0].value
 
+    #
+    # operands
+    #
+    def register_operand(self, reg: Tree):
+        self._operands.append(
+            (OperandType.REGISTER, reg.children[0].value)
+        )
+
+    def immediate_operand(self, imm: Tree):
+        value: Tree = imm.children[0]
+        # todo(pablo): check maximum supported bit length in immediate and fail fast
+        match value.data:
+            case "binary": self._operands.append(
+                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 2)))
+            )
+            case "hexa": self._operands.append(
+                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 16)))
+            )
+            case "decimal": self._operands.append(
+                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 10)))
+            )
+            case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
+
     def produce_instruction(self) -> Instruction:
         return Instruction(
             opcode=self._opcode,
+            operands=self._operands,
         )
 
 
 # initialize parser with grammar
 with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
-_ = Lark(grammar, start="prog")
+_parser = Lark(grammar, start="prog")
 
 def parse(text: str) -> Program:
     """
@@ -85,8 +121,10 @@ def parse(text: str) -> Program:
     :param str text: the program to parse
     :return Program: the parsed and processed program
     """    
-    parsed_tree = _.parse(text)
-    # print(parsed_tree.pretty())
+    parsed_tree = _parser.parse(text)
+    
+    # if debug is enabled, this will print the parsed tree
+    log.debug(parsed_tree.pretty())
 
     print("compiling tree")
     visitor = ProgramVisitor()
