@@ -1,11 +1,20 @@
 from lark import Lark, Visitor, Tree, Token
 from dataclasses import dataclass
 from typing import List, Dict
+from os import path
 
-# https://github.com/antlr/grammars-v4/blob/master/asm/asm8086/asm8086.g4
+"""
+DiBU parser and assambler, based in a EBNF grammar.
+
+References:
+
+http://blog.erezsh.com/how-to-write-a-dsl-in-python-with-lark/
+https://github.com/antlr/grammars-v4/blob/master/asm/asm8086/asm8086.g4
+"""
 
 INSTRUCTION_SIZE = 16
 
+CURRENT_DIR = path.dirname(path.realpath(__file__))
 
 class ProgramVisitor(Visitor):
     def __init__(self) -> None:
@@ -64,7 +73,7 @@ class CodeLineVisitor(Visitor):
         )
 
 
-with open("grammar.lark", "r") as f:
+with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
 
 parser = Lark(grammar, start="prog")
