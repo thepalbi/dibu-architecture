@@ -73,26 +73,24 @@ class CodeLineVisitor(Visitor):
         )
 
 
+# initialize parser with grammar
 with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
+_ = Lark(grammar, start="prog")
 
-parser = Lark(grammar, start="prog")
+def parse(text: str) -> Program:
+    """
+    parse parses the given string into a Program object
 
-example = """loop: mov r1 r2
-// the instruction below generates a random number
-mov r1 r2
-loop: mov r2 r1
-rnd r1
-mov r1 b101
-jmp loop
-"""
+    :param str text: the program to parse
+    :return Program: the parsed and processed program
+    """    
+    parsed_tree = _.parse(text)
+    # print(parsed_tree.pretty())
 
-parsed_tree = parser.parse(example)
-print(parsed_tree.pretty())
+    print("compiling tree")
+    visitor = ProgramVisitor()
+    visitor.visit_topdown(parsed_tree)
 
-print("compiling tree")
-visitor = ProgramVisitor()
-visitor.visit_topdown(parsed_tree)
-
-program = visitor.produce_program()
-print(program)
+    return visitor.produce_program()
+    
