@@ -28,16 +28,16 @@ operands: operand+
     | NAME          -> label_operand
     | address
 
+?address: "[" address_mode "]"
+
+?address_mode: REG_NAME -> mem_indirect
+    | immediate         -> mem_direct
+
 REG_NAME: "r" DIGIT
 
 immediate: IMM_BINARY -> binary
     | IMM_HEXA        -> hexa
     | IMM_DECI        -> decimal
-
-?address: "[" address_mode "]"
-
-?address_mode: REG_NAME -> mem_indirect
-    | immediate         -> mem_direct
 
 IMM_BINARY: "0b" ("0" | "1")+
 IMM_HEXA: "0x" (DIGIT | "a".."f")+

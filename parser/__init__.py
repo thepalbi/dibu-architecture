@@ -1,1 +1,1 @@
-from .parser import parse, Program
+from .parser import parse, Program, Instruction, OperandType

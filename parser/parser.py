@@ -71,7 +71,7 @@ class Instruction:
 class Program:
     instructions: List[Instruction]
     labels: Dict[str, int]
-
+                
 
 class CodeLineVisitor(Visitor):
     def __init__(self) -> None:
@@ -111,7 +111,7 @@ class CodeLineVisitor(Visitor):
 
     def mem_direct(self, imm: Tree):
         self._operands.append(
-            (OperandType.MEM_REGISTER, self.parse_immediate(imm.children[0]))
+            (OperandType.MEM_IMMEDIATE, self.parse_immediate(imm.children[0]))
         )
 
     def produce_instruction(self) -> Instruction:
