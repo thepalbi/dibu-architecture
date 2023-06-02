@@ -55,6 +55,8 @@ class ProgramVisitor(Visitor):
 class OperandType(Enum):
     REGISTER = 1
     IMMEDIATE = 2
+    MEM_REGISTER = 3
+    MEM_IMMEDIATE = 4
 
 @dataclass
 class Instruction:
@@ -89,18 +91,28 @@ class CodeLineVisitor(Visitor):
 
     def immediate_operand(self, imm: Tree):
         value: Tree = imm.children[0]
+        parsed_immediate_value = self.parse_immediate(value)
+        self._operands.append(
+            (OperandType.IMMEDIATE, parsed_immediate_value)
+        )
+
+    def parse_immediate(self, value: Tree):
         # todo(pablo): check maximum supported bit length in immediate and fail fast
         match value.data:
-            case "binary": self._operands.append(
-                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 2)))
-            )
-            case "hexa": self._operands.append(
-                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 16)))
-            )
-            case "decimal": self._operands.append(
-                    (OperandType.IMMEDIATE, bin(int(value.children[0].value[2:], 10)))
-            )
+            case "binary": return bin(int(value.children[0].value[2:], 2))
+            case "hexa": return bin(int(value.children[0].value[2:], 16))
+            case "decimal": return bin(int(value.children[0].value[2:], 10))
             case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
+
+    def mem_indirect(self, reg: Tree):
+        self._operands.append(
+            (OperandType.MEM_REGISTER, reg.children[0].value)
+        )
+
+    def mem_direct(self, imm: Tree):
+        self._operands.append(
+            (OperandType.MEM_REGISTER, self.parse_immediate(imm.children[0]))
+        )
 
     def produce_instruction(self) -> Instruction:
         return Instruction(
