@@ -53,10 +53,10 @@ class ProgramVisitor(Visitor):
         )
 
 class OperandType(Enum):
-    REGISTER = 1
-    IMMEDIATE = 2
-    MEM_REGISTER = 3
-    MEM_IMMEDIATE = 4
+    REGISTER = "reg"
+    IMMEDIATE = "imm"
+    MEM_REGISTER = "mem_reg"
+    MEM_IMMEDIATE = "mem_imm"
 
 @dataclass
 class Instruction:
@@ -65,6 +65,9 @@ class Instruction:
 
     def __repr__(self) -> str:
         return "%s %s" % (self.opcode, " ".join([op[1] for op in self.operands]))
+
+    def print_format(self) -> str:
+        return "%s %s" % (self.opcode, " ".join([op[0].value for op in self.operands]))
 
 
 @dataclass
@@ -120,6 +123,24 @@ class CodeLineVisitor(Visitor):
             operands=self._operands,
         )
 
+OT = OperandType
+
+def assemble(p: Program, format="binary") -> str:
+    """
+    assemble assembles a Program p into it's binary representation.
+
+    :param Program p: the program to assemble
+    :param str format: the format to encode the assembled program
+    :return str: the assembled program
+    """
+    result = ""
+    for i in p.instructions:
+        match i:
+            case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
+                result += "%s <- %s" % (r1, r2)
+            case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))
+
+    return result
 
 # initialize parser with grammar
 with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:

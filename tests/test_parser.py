@@ -3,7 +3,7 @@ from parser import *
 import logging
 
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s %(levelname)s %(message)s')
+# logging.basicConfig(level=logging.DEBUG, format='%(name)s %(levelname)s %(message)s')
 
 
 class ParserTest(unittest.TestCase):
@@ -69,3 +69,22 @@ class ParserTest(unittest.TestCase):
         """
         with self.assertRaises(Exception) as ctx:
             parse(example)
+
+    def test_assemble_smoke(self):
+        example = """mov r3 r4
+        """
+        expected = """r3 <- r4"""
+        parsed_program = parse(example)
+        assembled_program = assemble(parsed_program)
+        self.assertEqual(expected, assembled_program)
+
+
+    def test_assemble_error(self):
+        with self.assertRaises(ValueError) as ctx:
+            example = """mov 0d14 0d14
+            """
+            parsed_program = parse(example)
+            # this should fail due to the instruction above being invalid
+            assemble(parsed_program)
+        # log the exception
+        print(ctx.exception)
