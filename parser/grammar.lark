@@ -47,8 +47,8 @@ EOL: "\n"
 
 NAME: ("a".."z" | "_" | "A".."Z")+
 
+COMMENT: /;[^\n]*/ 
 WHITESPACE: " "
 %ignore WHITESPACE
 
 %import common.DIGIT
-%import common.CPP_COMMENT -> COMMENT

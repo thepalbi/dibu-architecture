@@ -9,20 +9,20 @@ import logging
 class ParserTest(unittest.TestCase):
     def test_smoke_parse(self):
         example = """loop: mov r1 r2
-        // the instruction below generates a random number
+        ; the instruction below generates a random number
         mov r1 r2
         loop: mov r2 r1
         rnd r1
         mov r1 0b101
         mov r1 0x100
         mov r1 0d7
-        // direccionamiento directo
+        ; direccionamiento directo
         load r1 [0d14]
-        // direccionamiento indirecto
+        ; direccionamiento indirecto
         load r1 [r1]
-        // direccionamiento directo
+        ; direccionamiento directo
         str [0d14] r1
-        // direccionamiento indirecto
+        ; direccionamiento indirecto
         str [r1] r1
         jmp loop
         """
