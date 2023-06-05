@@ -1,5 +1,7 @@
 `timescale 1ns / 1ps
 
+`include "constants.v"
+
 // alu implements an 8-bit ALU.
 module alu(
     a,
@@ -22,13 +24,7 @@ module alu(
     //
     // supported ops and their codes
     //
-    localparam OP_SUM = 0'd0;
-    localparam OP_SUB = 0'd1;
-    localparam OP_AND = 0'd2;
-    localparam OP_OR = 0'd3;
-    localparam OP_LSL = 0'd4;
-    localparam OP_LSR = 0'd5;
-    localparam OP_NOT = 0'd6;
+    
     
     // todo(pablo): this should be 3-bit
     // op is the 4-bit alu function code. Possible values are described
@@ -68,15 +64,15 @@ module alu(
     
     always @ (*) begin
         case (op)
-            OP_SUM: begin
+            `OP_SUM: begin
                 {t_carry, out} <= a + b;
             end
-            OP_SUB: out <= a - b;
-            OP_AND: out <= a & b;
-            OP_OR: out <= a | b;
-            OP_NOT: out <= ~a;
-            OP_LSL: out <= a << b;
-            OP_LSR: out <= a >> b;
+            `OP_SUB: out <= a - b;
+            `OP_AND: out <= a & b;
+            `OP_OR: out <= a | b;
+            `OP_NOT: out <= ~a;
+            `OP_LSL: out <= a << b;
+            `OP_LSR: out <= a >> b;
             // todo(pablo): add here a debugger log
             default: out <= 8'd0;
         endcase
