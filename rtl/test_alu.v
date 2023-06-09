@@ -74,8 +74,8 @@ module test_alu();
         // todo: add assertion over flags
         if (out !== expected_out || flags !== expected_flags) begin
             // error
-            $display("FAILURE: out got = %d", out);
-            $display("             exp = %d", expected_out);
+            $display("FAILURE: out got = %h", out);
+            $display("             exp = %h", expected_out);
             $display("       flags got = %b", flags);
             $display("             exp = %b", expected_flags);
             errors = errors + 1;

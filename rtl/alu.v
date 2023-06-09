@@ -42,7 +42,7 @@ module alu(
     // operadores en ca2, bit mas significativo es signo
     assign negative = out[7];
     // https://en.wikipedia.org/wiki/Parity_function
-    assign parity = ^out;
+    assign parity = ~(^out);
     
     wire overflow_add, overflow_sub;
     

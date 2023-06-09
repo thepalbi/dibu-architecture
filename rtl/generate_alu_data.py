@@ -30,7 +30,7 @@ class TestCase:
             format_bitstring(self.b, 8),
             format_bitstring(self.expected_out, 8),
             format_bitstring(self.alu_op.value, 3),
-            format_bitstring(self.expected_flags, 5),
+            format_bitstring(self.expected_flags, 8),
         )
 
 
@@ -49,7 +49,9 @@ def format_bitstring(v, width) -> str:
 
 testcases = [
     TestCase(10, 10, 20, ALUOp.SUM, NONE),
-    TestCase(1, -1, 0, ALUOp.SUM, ZERO),
+    TestCase(1, -1, 0, ALUOp.SUM, ZERO | PARITY),
+    TestCase(0, -1, -1, ALUOp.SUM, NEGATIVE | PARITY),
+    TestCase(0b111, 0b101, 0b101, ALUOp.AND, PARITY),
 ]
 
 for tc in testcases:
