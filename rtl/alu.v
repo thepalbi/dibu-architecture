@@ -8,35 +8,34 @@ module alu(
     b,
     op,
     out,
-    zero,
-    negative,
-    carry,
-    overflow,
-    parity
+    flags
     );
+    
+    // INPUTS
     
     // a is the 8bit first operand. 
     // Whenever the operation uses just one operand, a should be used
     input [7:0] a;
     // b is the 8bit first operand
     input [7:0] b;
+    // op, selector de funcion de alu
+    // todo(pablo): renombrar por func
+    input [2:0] op;
     
-    //
-    // supported ops and their codes
-    //
-    
-    
-    // todo(pablo): this should be 3-bit
-    // op is the 4-bit alu function code. Possible values are described
-    // in the section above
-    input [3:0] op;
+    // OUTPUTS
     
     // out is the 8bit alu out
     output reg [7:0] out;
+    // flags is the 8bit flags out
+    output [7:0] flags;
     
-    // todo(pablo): this should be a single 8bit bus, and saved in registers
-    output zero, negative, parity, overflow, carry;
+    // INTERNAL VARS
     
+    wire zero, negative, parity, overflow, carry;
+    
+    // COMBINATIONAL LOGIC
+    
+    assign flags = {3'd0, parity, zero, overflow, negative, carry};
     
     // combinatory flags
     assign zero = (out == 8'd0) ? 1 : 0;
@@ -61,6 +60,7 @@ module alu(
     
     // PREGUNTA: que hacemo con el carry deivid?
     reg t_carry;
+    initial begin; t_carry = 0; end
     
     always @ (*) begin
         case (op)
@@ -74,7 +74,9 @@ module alu(
             `OP_LSL: out <= a << b;
             `OP_LSR: out <= a >> b;
             // todo(pablo): add here a debugger log
-            default: out <= 8'd0;
+            default begin
+                $display("unsupported alu op: %b", op);
+            end
         endcase
     end
 endmodule

@@ -1,9 +1,17 @@
 // contants.v contains project wide defines and macros
 
-`define OP_SUM  4'd0
-`define OP_SUB  4'd1
-`define OP_AND  4'd2
-`define OP_OR   4'd3
-`define OP_LSL  4'd4
-`define OP_LSR  4'd5
-`define OP_NOT  4'd6
+// alu ops
+`define OP_SUM  3'd0
+`define OP_SUB  3'd1
+`define OP_AND  3'd2
+`define OP_OR   3'd3
+`define OP_LSL  3'd4
+`define OP_LSR  3'd5
+`define OP_NOT  3'd6
+
+// ALU flag positions
+`define FLAG_CARRY      0
+`define FLAG_NEGATIVE   1
+`define FLAG_OVERFLOW   2
+`define FLAG_ZERO       3
+`define FLAG_PARITY     4
