@@ -56,7 +56,7 @@ module test_alu();
     initial begin
         $display("starting alu test suite");
         $readmemb("./alu_data.mem", testvectors);
-        clk = 0;
+        clk = 1;
         a = 0;
         b = 0;
         alu_op = 0;
@@ -72,10 +72,12 @@ module test_alu();
     always @ (negedge clk) begin
         $display("TEST %d", vectornum);
         // todo: add assertion over flags
-        if (out !== expected_out) begin
+        if (out !== expected_out || flags !== expected_flags) begin
             // error
-            $display("FAILURE: got = %d", out);
-            $display("         exp = %d", expected_out);
+            $display("FAILURE: out got = %d", out);
+            $display("             exp = %d", expected_out);
+            $display("       flags got = %b", flags);
+            $display("             exp = %b", expected_flags);
             errors = errors + 1;
         end
         vectornum = vectornum + 1;
