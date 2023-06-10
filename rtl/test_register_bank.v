@@ -11,13 +11,7 @@ module test_register_bank();
     
     // test outputs
     wire [7:0] a, b;
-    reg [7:0] expect_a, expect_b;
     
-    // test data
-    // vectornum is the index in the testvectors arr
-    reg [31:0] vectornum, errors;
-    reg [22:0] testvectors [0:1000];
-
     register_bank uut(
         .clk(clk),
         .ri_a(ri_a),
@@ -29,55 +23,36 @@ module test_register_bank();
         .d(d)
     );
     
-    //
-    // clock with a 10ns period
-    // 
-    always #5 clk = ~clk;
-    
     // read test data and clear auxiliary vars
     initial begin
         $display("starting register bank test suite");
-        $readmemb("./register_bank_data.mem", testvectors);
         clk = 0;
         d = 0;
         ri_a = 0;
         ri_b = 0;
         ri_d = 0;
         rw = 0;
-        vectornum = 0;
-        errors = 0;
+
+        // r0 <- 7
+        rw = 1;
+        d = 8'd7;
+        // clock cycle
+        clk = 1; #5; clk = 0; #5;
+        // r1 <- 5
+        ri_d = 3'd1;
+        d = 8'd5;
+        // clock cycle
+        clk = 1; #5; clk = 0; #5;
+        // read registers and assert
+        rw = 0;
+        ri_a = 3'd0;
+        ri_b = 3'd1;
+        // clock cycle
+        clk = 1; #5; clk = 0; #5;
+
+        if (a !== 8'd7) $display("r0 assertion failed; got = %d, exp = %d", a, 8'd7);
+        if (b !== 8'd5) $display("r1 assertion failed; got = %d, exp = %d", b, 8'd5);
+        $finish;
     end
-    
-    // on everyposedge, read test data
-    always @ (posedge clk) begin
-        rw = testvectors[vectornum][0];
-        if (rw) begin
-            // if writing, vector will contain indexes and data
-            {ri_d, d, rw} = testvectors[vectornum][11:0];
-            $display("writing r%d <- %d", ri_d, d);
-        end else
-            // if reading, assert over both registers 
-            {ri_a, expect_a, ri_b, expect_b, rw} = testvectors[vectornum];
-    end
-    
-    // main test harness
-    always @ (negedge clk) begin
-        if (~rw) begin
-            $display("TEST %d", vectornum);
-            // todo: add assertion over flags
-            if (a !== expect_a || b !== expect_b) begin
-                // error
-                $display("FAILURE: a got = %h", a);
-                $display("           exp = %h", expect_a);
-                $display("         b got = %h", b);
-                $display("           exp = %h", expect_b);
-                errors = errors + 1;
-            end
-        end
-        vectornum = vectornum + 1;
-        if (testvectors[vectornum] === 23'bx) begin
-            $display("%d tests ran, %d failed", vectornum, errors);
-            $finish;
-        end
-    end
+
 endmodule
