@@ -22,9 +22,11 @@ module register_bank(clk, ri_a, ri_b, ri_d, rw, d, a, b);
 
     integer i;
     initial begin
-        for (i = 0; i < 7; i=i+1) begin
+        for (i = 0; i <= 7; i=i+1) begin
             bank[i] = 8'd0;
         end
+        a = 0;
+        b = 0;
     end
 
     always @ (posedge clk) begin
