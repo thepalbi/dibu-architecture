@@ -1,13 +1,14 @@
 from bitstring import Bits
 from dataclasses import dataclass
 from enum import Enum
+from typing import Union
 
 
 class ALUOp(Enum):
     """
     ALUOp represents and ALU operation code.
     """
-    SUM = 0
+    ADD = 0
     SUB = 1
     AND = 2
     OR = 3
@@ -16,21 +17,26 @@ class ALUOp(Enum):
     NOT = 6
 
 
+IntOrString = Union[int, str]
+
+
 @dataclass
 class TestCase:
-    a: int
-    b: int
-    expected_out: int
+    a: IntOrString
+    b: IntOrString
+    expected_out: IntOrString
     alu_op: ALUOp
     expected_flags: int
+    ignore_flags: bool = False
 
     def render(self):
-        return "%s_%s_%s_%s_%s" % (
+        return "%s_%s_%s_%s_%s_%s" % (
             format_bitstring(self.a, 8),
             format_bitstring(self.b, 8),
             format_bitstring(self.expected_out, 8),
-            format_bitstring(self.alu_op.value, 3),
+            Bits(uint=self.alu_op.value, length=3).bin,
             format_bitstring(self.expected_flags, 8),
+            '1' if self.ignore_flags else '0',
         )
 
 
@@ -44,14 +50,27 @@ PARITY = 0b1 << 4
 
 
 def format_bitstring(v, width) -> str:
-    return Bits(int=v, length=width).bin
+    if isinstance(v, str):
+        return Bits(auto=v).bin
+    else:
+        return Bits(int=v, length=width).bin
 
 
 testcases = [
-    TestCase(10, 10, 20, ALUOp.SUM, NONE),
-    TestCase(1, -1, 0, ALUOp.SUM, ZERO | PARITY),
-    TestCase(0, -1, -1, ALUOp.SUM, NEGATIVE | PARITY),
+    TestCase(10, 11, 21, ALUOp.ADD, NONE),
+    # carry expected here since in unsigned, it's 2**8-1  + 1, going over resolution
+    TestCase(1, -1, 0, ALUOp.ADD, ZERO | PARITY | CARRY),
+    TestCase(0, -1, -1, ALUOp.ADD, NEGATIVE | PARITY),
+    TestCase(10, 6, 4, ALUOp.SUB, NONE),
+    TestCase(-10, 6, -16, ALUOp.SUB, PARITY | NEGATIVE),
+    # overflow cases. 8bit 2 complement goes from [-128 to 127]
+    TestCase(-128, 1, 127, ALUOp.SUB, OVERFLOW),
+    TestCase(127, 1, -128, ALUOp.ADD, OVERFLOW | NEGATIVE),
+    # logical ops
     TestCase(0b111, 0b101, 0b101, ALUOp.AND, PARITY),
+    TestCase(0b010, 0b100, 0b110, ALUOp.OR, PARITY),
+    TestCase("0x0f", 4, "0xf0", ALUOp.LSL, NONE, ignore_flags=True),
+    TestCase("0xf0", 4, "0x0f", ALUOp.LSR, NONE, ignore_flags=True),
 ]
 
 for tc in testcases:

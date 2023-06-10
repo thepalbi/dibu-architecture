@@ -31,51 +31,61 @@ module alu(
     
     // INTERNAL VARS
     
-    wire zero, negative, parity, overflow, carry;
+    wire zero, negative, parity, overflow;
+    reg carry;
     
     // COMBINATIONAL LOGIC
     
     assign flags = {3'd0, parity, zero, overflow, negative, carry};
     
     // combinatory flags
-    assign zero = (out == 8'd0) ? 1 : 0;
+    // invert all bits, if all zero it will be 8'b1*, then and bit by bit
+    assign zero = &(~out);
     // operadores en ca2, bit mas significativo es signo
     assign negative = out[7];
     // https://en.wikipedia.org/wiki/Parity_function
     assign parity = ~(^out);
     
-    wire overflow_add, overflow_sub;
-    
-    assign overflow_add = 
-        (a[7] ~^ b[7]) // si los dos operando tienen el mismo signo
-        & (b[7] != out[7]); // y la salida tiene signo diferente, dio la vuelta
-        
-    assign overflow_sub = 
-        (~a[7] & b[7] & out[7]) |
-        (a[7] & ~b[7] & ~out[7]);
-    
-    assign overflow = overflow_add | overflow_sub;
-    
-    assign carry = t_carry | 0;
-    
-    // PREGUNTA: que hacemo con el carry deivid?
-    reg t_carry;
-    initial begin; t_carry = 0; end
+    // if it's substraction, use the same overflow logic but apply
+    // the negative sign to be before, so that a - b => a + (-b)
+    wire [7:0] maybe_negated_b = op == `OP_SUB ? (~b + 1) : b;
+    assign overflow =
+        (a[7] ~^ maybe_negated_b[7]) // si los dos operando tienen el mismo signo
+        & (a[7] != out[7]); // y la salida tiene signo diferente, dio la vuelta
     
     always @ (*) begin
         case (op)
             `OP_SUM: begin
-                {t_carry, out} <= a + b;
+                {carry, out} <= a + b;
             end
-            `OP_SUB: out <= a - b;
-            `OP_AND: out <= a & b;
-            `OP_OR: out <= a | b;
-            `OP_NOT: out <= ~a;
-            `OP_LSL: out <= a << b;
-            `OP_LSR: out <= a >> b;
-            // todo(pablo): add here a debugger log
+            `OP_SUB: begin
+                out <= a - b;
+                carry <= 0;
+            end
+            `OP_AND: begin
+                out <= a & b;
+                carry <= 0;
+            end
+            `OP_OR: begin
+                out <= a | b;
+                carry <= 0;
+            end
+            `OP_NOT: begin
+                out <= ~a;
+                carry <= 0;
+            end
+            `OP_LSL: begin
+                out <= a << b;
+                carry <= 0;
+            end
+            `OP_LSR: begin
+                out <= a >> b;
+                carry <= 0;
+            end
             default begin
                 $display("unsupported alu op: %b", op);
+                carry <= 0;
+                out <= 0;
             end
         endcase
     end
