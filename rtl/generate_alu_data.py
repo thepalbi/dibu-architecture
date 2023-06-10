@@ -71,6 +71,7 @@ testcases = [
     TestCase(0b010, 0b100, 0b110, ALUOp.OR, PARITY),
     TestCase("0x0f", 4, "0xf0", ALUOp.LSL, NONE, ignore_flags=True),
     TestCase("0xf0", 4, "0x0f", ALUOp.LSR, NONE, ignore_flags=True),
+    TestCase("0xf0", 4, "0x0f", ALUOp.NOT, NONE, ignore_flags=True),
 ]
 
 for tc in testcases:
