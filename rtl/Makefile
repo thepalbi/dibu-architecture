@@ -1,6 +1,9 @@
-all: alu_test
+all: test_data
+IVERLOG_FLAGS := -Wall
 
-alu_test:
+test_data:
 	@python generate_alu_data.py > alu_data.mem
-	@iverilog -Wall -o test_alu.out alu.v test_alu.v
-	@vvp test_alu.out
+
+test_%: test_data
+	iverilog $(IVERLOG_FLAGS) -o $(patsubst test_%, test_%.out, $@) $(patsubst test_%, %.v, $@) $(patsubst %, %.v, $@)
+	vvp $(patsubst test_%,test_%.out,$@)

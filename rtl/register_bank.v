@@ -1,25 +1,4 @@
 `timescale 1ns / 1ps
-//////////////////////////////////////////////////////////////////////////////////
-// Company: 
-// Engineer: 
-// 
-// Create Date: 06/05/2023 08:50:53 PM
-// Design Name: 
-// Module Name: register_bank
-// Project Name: 
-// Target Devices: 
-// Tool Versions: 
-// Description: 
-// 
-// Dependencies: 
-// 
-// Revision:
-// Revision 0.01 - File Created
-// Additional Comments:
-// 
-//////////////////////////////////////////////////////////////////////////////////
-
-
 //
 // register_bank is the DiBU main register bank. ri_* are the registers index.
 // a, b are the read registers, and d is the input for writing a register.
@@ -41,11 +20,18 @@ module register_bank(clk, ri_a, ri_b, ri_d, rw, d, a, b);
 
     reg [7:0] bank [0:7];
 
+    integer i;
+    initial begin
+        for (i = 0; i < 7; i=i+1) begin
+            bank[i] = 8'd0;
+        end
+    end
+
     always @ (posedge clk) begin
         if (rw) begin
             // write
             bank[ri_d] <= d;
-        else
+        end else begin
             // read
             a <= bank[ri_a];
             b <= bank[ri_b];
