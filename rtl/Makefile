@@ -1,9 +1,17 @@
-all: test_data
-IVERLOG_FLAGS := -Wall
+# Makefile
 
-generate:
-	@python generate_alu_data.py > alu_data.mem
+# defaults
+SIM ?= icarus
+TOPLEVEL_LANG ?= verilog
 
-test_%: generate
-	iverilog $(IVERLOG_FLAGS) -o $(patsubst test_%, test_%.out, $@) $(patsubst test_%, %.v, $@) $(patsubst %, %.v, $@)
-	vvp $(patsubst test_%,test_%.out,$@)
+VERILOG_SOURCES += $(PWD)/register_bank.v
+# use VHDL_SOURCES for VHDL files
+
+# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
+TOPLEVEL = register_bank
+
+# MODULE is the basename of the Python test file
+MODULE = test_register_bank
+
+# include cocotb's make rules to take care of the simulator setup
+include $(shell cocotb-config --makefiles)/Makefile.sim

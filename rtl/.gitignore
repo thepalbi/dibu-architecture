@@ -1,1 +1,3 @@
 *.out
+sim_build/
+results.xml
