@@ -1,2 +1,3 @@
 lark==1.1.5
 bitstring
+cocotb
