@@ -1,3 +1,6 @@
 env/
 .env/
 **/__pycache__/
+*.out
+**/sim_build/
+results.xml
