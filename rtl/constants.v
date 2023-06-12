@@ -15,3 +15,7 @@
 `define FLAG_OVERFLOW   2
 `define FLAG_ZERO       3
 `define FLAG_PARITY     4
+
+// defaults for dibu
+`define DATA_WORD_SIZE 8
+`define DATA_ADDR_SIZE 9
