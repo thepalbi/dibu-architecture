@@ -12,6 +12,9 @@ function run_test {
     MODULE=$3 make
 }
 
+# echo "running alu tests"
+# run_test "`pwd`/../rtl/alu.v" alu test_alu
+
 echo "running memory tests"
 run_test "`pwd`/../rtl/tb_memory.v `pwd`/../rtl/memory.v" tb_memory test_memory_bank
 
