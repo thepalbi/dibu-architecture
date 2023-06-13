@@ -4,6 +4,7 @@ from typing import List, Dict, Tuple
 from os import path
 import logging
 from enum import Enum
+from bitstring import Bits
 
 log = logging.getLogger(__name__)
 
@@ -101,10 +102,11 @@ class CodeLineVisitor(Visitor):
 
     def parse_immediate(self, value: Tree):
         # todo(pablo): check maximum supported bit length in immediate and fail fast
+        IMMEDIATE_LENGTH=8
         match value.data:
-            case "binary": return bin(int(value.children[0].value[2:], 2))
-            case "hexa": return bin(int(value.children[0].value[2:], 16))
-            case "decimal": return bin(int(value.children[0].value[2:], 10))
+            case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
+            case "hexa": return Bits(hex=value.children[0].value, length=IMMEDIATE_LENGTH).bin
+            case "decimal": return Bits(int=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
             case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
 
     def mem_indirect(self, reg: Tree):
@@ -137,10 +139,19 @@ def assemble(p: Program, format="binary") -> str:
     for i in p.instructions:
         match i:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "%s <- %s" % (r1, r2)
+                result += "00111%s00%s000\n" % (asm_register(r1), asm_register(r2))
+            case Instruction("mov", [(OT.REGISTER, r1), (OT.IMMEDIATE, imm)]):
+                result += "01000%s%s\n" % (asm_register(r1), imm)
+            case Instruction("not", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
+                result += "00110%s00%s000\n" % (asm_register(r1), asm_register(r2))
             case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))
 
     return result
+
+def asm_register(reg) -> str:
+    register_num = int(reg[1:])
+    return Bits(uint=register_num, length=3).bin
+
 
 # initialize parser with grammar
 with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:

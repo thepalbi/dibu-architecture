@@ -14,12 +14,9 @@ OPCODE: "mov"
     | "sub"
     | "and"
     | "or"
-    | "rnd"
-    | "jmp"
-    | "str"
-    | "load"
-    | "addi"
-    | "addm"
+    | "lsl"
+    | "lsr"
+    | "not"
 
 operands: operand+
 
