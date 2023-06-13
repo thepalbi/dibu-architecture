@@ -30,6 +30,8 @@ module register #(parameter width=8) (clk, w_en, d_in, d_out);
     // d_out: data out
     output reg [width-1:0] d_out;
 
+    initial d_out <= 0;
+
     always @ (posedge clk) begin
         if (w_en)
             d_out <= d_in;

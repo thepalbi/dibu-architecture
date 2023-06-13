@@ -2,8 +2,16 @@
 
 `include "constants.v"
 
-module datapath(clk);
+module datapath(clk, run, code_w_en, code_addr_in, code_in);
     input clk;
+    //code_w_en: enable write to code memory
+    //run: enable run processor
+    input code_w_en;
+    input run;
+    //code_in: code input
+    input [15:0] code_in;
+    // code_addr_in: code address in
+    input [8:0] code_addr_in;
     reg zero;
     reg [15:0] big_zero;
     
@@ -22,7 +30,7 @@ module datapath(clk);
 
     // control if the pc should be incremented in next rising edge
     wire pc_inc;
-    assign pc_in = signals[0];
+    assign pc_inc = signals[0];
     // control if memory address register should be writtenn 
     wire mar_w_en;
     assign mar_w_en = signals[1];
@@ -33,7 +41,7 @@ module datapath(clk);
     assign reg_rw = signals[2];
     // control if register data in should be alu out or immediate from ir
     // 0 alu
-    // 1 immediate
+    // 1 immediatcode_w_ene
     wire reg_select_in;
     assign reg_select_in = signals[3];
     // control if the flags should be written from the alu
@@ -42,11 +50,13 @@ module datapath(clk);
 
     
     // pc: program counter
+    wire [8:0] pc_write_in;
+    assign pc_write_in = pc_inc ? pc+1 : pc;
     wire [8:0] pc;
     register #(9) pc_register(
         .clk(clk),
-        .w_en(pc_in),
-        .d_in(pc + 1),
+        .w_en(pc_inc),
+        .d_in(pc_write_in),
         .d_out(pc)
     );
 
@@ -68,9 +78,9 @@ module datapath(clk);
 
     memory_bank #(16, 9) code_mem(
         .clk(clk),
-        .w_en(zero),
-        .addr(mar),
-        .d_in(big_zero),
+        .w_en(code_w_en),
+        .addr(code_w_en ? code_addr_in : mar),
+        .d_in(code_in),
         .d_out(ir)
     );
 
@@ -85,7 +95,7 @@ module datapath(clk);
 
     // control unit
     ctrl_unit control(
-        .clk(clk),
+        .clk(clk & run),
         .opcode(ir[15:11]),
         .signals(signals)
     );
@@ -97,7 +107,7 @@ module datapath(clk);
         .ri_a(ir[5:3]),
         .ri_b(ir[2:0]),
         .ri_d(ir[10:8]),
-        .rw(rw),
+        .rw(reg_rw),
         .d(reg_data_in),
         .a(alu_a),
         .b(alu_b)
@@ -114,7 +124,7 @@ module datapath(clk);
         .a(alu_a),
         .b(alu_b),
         .out(alu_out),
-        .flags(w_flags),
+        .flags(alu_flags),
         .op(ir[13:11])
     );
 endmodule
