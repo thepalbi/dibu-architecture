@@ -8,6 +8,7 @@
 `define OP_LSL  3'd4
 `define OP_LSR  3'd5
 `define OP_NOT  3'd6
+`define OP_ID  3'd7
 
 // ALU flag positions
 `define FLAG_CARRY      0
@@ -18,4 +19,17 @@
 
 // defaults for dibu
 `define DATA_WORD_SIZE 8
-`define DATA_ADDR_SIZE 9
+`define DATA_ADDR_SIZE 10
+
+// control unit stuff
+
+`define micro_addr_size     3
+`define signals_size    5
+// +1 for the decision state bit
+`define store_word_size `micro_addr_size+`signals_size+1
+
+// microsintruction bits
+
+// Maddress where the ir is already decoded, and the instruction path needs to be decided
+`define DECISION_MICRO_ADDR 7
+

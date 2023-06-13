@@ -1,0 +1,13 @@
+// fetch
+001_00011_0 // 0: MAR <- PC, PC <- PC+1
+111_00000_0 // wait for instruction to be read
+// mov r <- r
+011_00000_0 // 2: register is read into ra
+000_00100_0 // reg_rw <- 1
+// op r,r,r
+101_00000_0 // 4: registers are read into ra and rb
+000_10100_0 // flags_w_en <-1, reg_rw <- 1
+// mov r, imm
+000_01100_0 // 6: reg_rw <- 1, reg_select_in <- 1
+// decision state, decision is purely based on opcode
+000_00000_1 // 7: ...

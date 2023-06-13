@@ -82,10 +82,9 @@ module alu(
                 out <= a >> b;
                 carry <= 0;
             end
-            default begin
-                $display("unsupported alu op: %b", op);
+            `OP_ID: begin
+                out <= a;
                 carry <= 0;
-                out <= 0;
             end
         endcase
     end
