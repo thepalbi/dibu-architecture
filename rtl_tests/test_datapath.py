@@ -33,5 +33,11 @@ async def datapath_simple_test(dut):
     dut.code_w_en.value = 0
     dut.run.value = 1
 
+    dut._log.info("arranco a ejecutar")
+
     # memory has been written
-    await ClockCycles(dut.clk, num_cycles=20, rising=False)
+    for i in range(20):
+        await FallingEdge(dut.clk)
+        dut._log.info("debug is: %s", dut.debug.value)
+        dut._log.info("microinstr = %s", dut.control.signals.value)
+        # await ClockCycles(dut.clk, num_cycles=20, rising=False)

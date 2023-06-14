@@ -2,7 +2,7 @@
 
 `include "constants.v"
 
-module datapath(clk, run, code_w_en, code_addr_in, code_in);
+module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     input clk;
     //code_w_en: enable write to code memory
     //run: enable run processor
@@ -14,6 +14,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     input [8:0] code_addr_in;
     reg zero;
     reg [15:0] big_zero;
+    output [7:0] debug;
     
     initial begin
         zero = 0;
@@ -76,6 +77,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     // ir: instruction register
     wire [15:0] ir;
 
+    always @ (posedge clk) $display("el ir es: %h", ir);
+
     memory_bank #(16, 9) code_mem(
         .clk(clk),
         .w_en(code_w_en),
@@ -90,6 +93,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     
     wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
     wire [7:0] reg_data_in;
+
+    assign debug = alu_out;
     
     assign reg_data_in = reg_select_in ? immediate : alu_out; 
 

@@ -10,7 +10,8 @@ module ctrl_unit(clk, opcode, signals);
     // signals: output signals from the contorl unit
     output [4:0] signals;
 
-    reg [`store_word_size-1:0] store [0:`micro_addr_size-1];
+    // todo: parametrize this por favor
+    reg [`store_word_size-1:0] store [0:7];
     // next_addr are the address bits from the microsintruction
     wire [`micro_addr_size-1:0] next_addr;
     // chosen next address is the output of the microsequencer block
@@ -27,10 +28,15 @@ module ctrl_unit(clk, opcode, signals);
     assign signals = current[`signals_size:1];
     assign next_addr = current[`store_word_size-1:`store_word_size-`micro_addr_size];
 
+    integer i;
+
     // load microprogram in rom
     initial begin
         $display("reading microprogram into store");
-        $readmemb("./microprogram.mem", store);
+        $readmemb("/home/pablo/facultad/dibu-architecture/rtl/microprogram_clean.mem", store);
+        for (i=0;i<=7;i=i+1) 
+            $display("micro addr=%d instr=%b", i, store[i]);
+        current = 'd0;
     end
 
     // todo(pablo): maybe extract
@@ -58,5 +64,6 @@ module ctrl_unit(clk, opcode, signals);
     // sequential block
     always @ (posedge clk) begin
         current <= store[chosen_next_addr];
+        $display("microinstr: %h", chosen_next_addr);
     end
 endmodule
