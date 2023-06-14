@@ -14,24 +14,24 @@ test_program = [
 @cocotb.test()
 async def datapath_simple_test(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-    dut.run.value.value = 0
-    dut.code_w_en.value = 0
+    dut.run <= 0
+    dut.code_w_en <= 0
 
     # wait a bit, 2 clk cycles
     await Timer(20, units="ns")
     await FallingEdge(dut.clk)
 
     # write program
-    dut.code_w_en.value = 1
+    dut.code_w_en <= 1
     for i, l in enumerate(test_program):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
+        dut.code_addr_in <= i
+        dut.code_in <= BinaryValue(l)
         await FallingEdge(dut.clk)
 
     # im in a falling edge, and code has been written
 
-    dut.code_w_en.value = 0
-    dut.run.value = 1
+    dut.code_w_en <= 0
+    dut.run <= 1
 
     dut._log.info("arranco a ejecutar")
 

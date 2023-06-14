@@ -20,6 +20,12 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         zero = 0;
         big_zero = 15'd0;
         // program initials
+        // the "macro" to dump signals
+        `ifdef COCOTB_SIM
+        $dumpfile ("datapath.vcd");
+        $dumpvars (0, datapath);
+        #1;
+        `endif
     end
     
 
@@ -132,4 +138,5 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .flags(alu_flags),
         .op(ir[13:11])
     );
+
 endmodule
