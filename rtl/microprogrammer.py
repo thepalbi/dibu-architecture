@@ -79,6 +79,15 @@ if __name__ == "__main__":
             compiled_line |= (curr_addr+1) << ADDR_START_BIT
         result.append(compiled_line)
 
-    print("\n".join([
+    output = "\n".join([
         Bits(uint=l, length=9).bin for l in result
-    ]))
+    ])
+    print("compiled output program\n%s" % (output))
+
+    print("written to file")
+    with open("microprogram_clean.mem", "w") as f:
+        f.write(output)
+
+# todo: add code to also generate a signals.v that has which bit is which signal out of the control uni
+# this this is the only file with the actual definition, and in the datapath we can access to signals like
+# signals[`reg_w_en] ?
