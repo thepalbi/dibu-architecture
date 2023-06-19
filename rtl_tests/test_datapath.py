@@ -12,10 +12,12 @@ from dibuparser import parse, assemble
 
 test_program = """mov r3 0xf0
 not r4 r3
+halt 
 """
 
 test_compiled_program = assemble(parse(test_program))
 
+print(test_compiled_program)
 
 @cocotb.test()
 async def datapath_simple_test(dut):
@@ -42,13 +44,13 @@ async def datapath_simple_test(dut):
     dut._log.info("arranco a ejecutar")
 
     # memory has been written
-    for i in range(20):
-        await wait_until_diff_ir(dut)
-        dut._log.info("debug is: %s", dut.debug.value)
-        dut._log.info("microinstr = %s", dut.control.signals.value)
+    #await wait_until_diff_ir(dut)
+    await wait_until_halt(dut)
+    dut._log.info("debug is: %s", dut.debug.value)
+    dut._log.info("microinstr = %s", dut.control.signals.value)
 
-        dut._log.info("register file = %s", dut.rbank.bank.value)
-        # await ClockCycles(dut.clk, num_cycles=20, rising=False)
+    dut._log.info("register file = %s", dut.rbank.bank.value)
+    # await ClockCycles(dut.clk, num_cycles=20, rising=False)
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:
@@ -61,4 +63,11 @@ async def wait_until_diff_ir(dut):
             return
         current_ir = dut.ir.value
         dut._log.info("ir still the same, waiting!")
+        await FallingEdge(dut.clk)
+
+async def wait_until_halt(dut):
+    while True:
+        if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
+            return 
+        
         await FallingEdge(dut.clk)

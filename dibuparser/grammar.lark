@@ -17,8 +17,9 @@ OPCODE: "mov"
     | "lsl"
     | "lsr"
     | "not"
+    | "halt"
 
-operands: operand+
+operands: operand*
 
 ?operand: REG_NAME  -> register_operand
     | immediate     -> immediate_operand

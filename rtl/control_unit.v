@@ -33,7 +33,7 @@ module ctrl_unit(clk, opcode, signals);
     // load microprogram in rom
     initial begin
         $display("reading microprogram into store");
-        $readmemb("/home/pablo/facultad/dibu-architecture/rtl/microprogram_clean.mem", store);
+        $readmemb("../rtl/microprogram_clean.mem", store);
         for (i=0;i<=7;i=i+1) 
             $display("micro addr=%d instr=%b", i, store[i]);
         current = 'd0;
