@@ -11,7 +11,7 @@ module ctrl_unit(clk, opcode, signals);
     output [4:0] signals;
 
     // todo: parametrize this por favor
-    reg [`store_word_size-1:0] store [0:7];
+    reg [`store_word_size-1:0] store [0:31];
     // next_addr are the address bits from the microsintruction
     wire [`micro_addr_size-1:0] next_addr;
     // chosen next address is the output of the microsequencer block
@@ -34,8 +34,6 @@ module ctrl_unit(clk, opcode, signals);
     initial begin
         $display("reading microprogram into store");
         $readmemb("../rtl/microprogram_clean.mem", store);
-        for (i=0;i<=7;i=i+1) 
-            $display("micro addr=%d instr=%b", i, store[i]);
         current = 'd0;
     end
 

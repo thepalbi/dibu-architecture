@@ -7,7 +7,8 @@ import argparse
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
-
+ADDR_START_BIT = 6
+MICROINST_LENGHT = 11
 # the following contains all supported signals, in the order they show in the microsintruction
 # each symbol will be allowed in the microprogram file. Also, the first is the lowest bit (0), and
 # the last the highest.
@@ -65,8 +66,6 @@ result = []
 for i, [sym, _] in enumerate(SUPPORTED_SIGNALS):
     symbol_to_mask[sym] = 1 << i
 
-ADDR_START_BIT = 6
-
 
 def compile_microcode() -> str:
     for curr_addr, instr in enumerate(program):
@@ -88,7 +87,7 @@ def compile_microcode() -> str:
         result.append(compiled_line)
 
     return "\n".join([
-        Bits(uint=l, length=9).bin for l in result
+        Bits(uint=l, length=MICROINST_LENGHT).bin for l in result
     ])
 
 

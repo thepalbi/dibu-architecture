@@ -44,13 +44,10 @@ async def datapath_simple_test(dut):
     dut._log.info("arranco a ejecutar")
 
     # memory has been written
-    #await wait_until_diff_ir(dut)
     await wait_until_halt(dut)
-    dut._log.info("debug is: %s", dut.debug.value)
-    dut._log.info("microinstr = %s", dut.control.signals.value)
 
-    dut._log.info("register file = %s", dut.rbank.bank.value)
-    # await ClockCycles(dut.clk, num_cycles=20, rising=False)
+    assert dut.rbank.bank.value[3] == int("0xf0", base=16)
+    assert dut.rbank.bank.value[4] == int("0x0f", base=16)
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:

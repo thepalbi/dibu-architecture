@@ -23,13 +23,7 @@
 
 // control unit stuff
 
-`define micro_addr_size     3
+`define micro_addr_size     5
 `define signals_size    5
 // +1 for the decision state bit
 `define store_word_size `micro_addr_size+`signals_size+1
-
-// microsintruction bits
-
-// Maddress where the ir is already decoded, and the instruction path needs to be decided
-`define DECISION_MICRO_ADDR 7
-
