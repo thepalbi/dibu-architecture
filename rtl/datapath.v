@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "constants.v"
+`include "signals.v"
 
 module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     input clk;
@@ -37,23 +38,23 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
 
     // control if the pc should be incremented in next rising edge
     wire pc_inc;
-    assign pc_inc = signals[0];
+    assign pc_inc = signals[`s_pc_inc];
     // control if memory address register should be writtenn 
     wire mar_w_en;
-    assign mar_w_en = signals[1];
+    assign mar_w_en = signals[`s_mar_w_en];
     // control if register bank should read or write
     // 0 read
     // 1 write
     wire reg_rw;
-    assign reg_rw = signals[2];
+    assign reg_rw = signals[`s_reg_rw];
     // control if register data in should be alu out or immediate from ir
     // 0 alu
     // 1 immediatcode_w_ene
     wire reg_select_in;
-    assign reg_select_in = signals[3];
+    assign reg_select_in = signals[`s_reg_sel_in];
     // control if the flags should be written from the alu
     wire flags_w_en;
-    assign flags_w_en = signals[4];
+    assign flags_w_en = signals[`s_flags_w_en];
 
     
     // pc: program counter

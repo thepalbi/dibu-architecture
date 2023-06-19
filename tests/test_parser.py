@@ -1,5 +1,5 @@
 import unittest
-from parser import *
+from dibuparser import *
 import logging
 import textwrap
 

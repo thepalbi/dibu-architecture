@@ -39,7 +39,7 @@ program = [
 
     # mov r, r
     _([]),
-    _([], goto="fetch"),
+    _(["reg_rw"], goto="fetch"),
 
     # op r,r,r
     _([]),
@@ -111,8 +111,10 @@ if __name__ == "__main__":
 
     with open(args.output_constants, "w") as f:
         for i, [signal, comment] in enumerate(SUPPORTED_SIGNALS):
+            if signal == "decision":
+                continue
             f.write("// %s: %s\n" % (signal, comment))
-            f.write("`define s_%s\t\t%d\n" % (signal, i))
+            f.write("`define s_%s\t\t%d\n" % (signal, i-1))
 
     log.info("done")
 
