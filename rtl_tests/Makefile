@@ -11,7 +11,7 @@ SOURCES := $(shell python discover_tests.py $(MODULE) sources)
 VERILOG_SOURCES := $(foreach s,$(SOURCES),$(PWD)/../rtl/$(s))
 
 # include cocotb's make rules to take care of the simulator setup
-include $(shell cocotb-config --makefiles)/Makefile.sim
+include $(shell python -m cocotb.config --makefiles)/Makefile.sim
 
 regression: $(TESTS)
 
