@@ -91,7 +91,7 @@ async def test_two_registers_add(dut):
     assert dut.rbank.bank.value[5] == int("0xf1", base=16)
 
 @cocotb.test()
-async def test_two_registers_add(dut):
+async def test_movf(dut):
     test_program = """mov r3 0x01
     mov r4 0x00
     sub r5 r4 r3
@@ -126,7 +126,7 @@ async def test_two_registers_add(dut):
     # memory has been written
     await wait_until_halt(dut)
 
-    assert dut.rbank.bank.value[5] == int("00000000", base=2)
+    assert dut.rbank.bank.value[5] == int("00000010", base=2)
 
 
 async def wait_until_diff_ir(dut):
