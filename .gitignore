@@ -7,3 +7,4 @@ results.xml
 *.jou
 *.log
 .DS_Store
+*.vcd
