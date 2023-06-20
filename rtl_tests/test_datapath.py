@@ -11,6 +11,10 @@ sys.path.append(path.join(CURRENT_DIR, "../"))
 from dibuparser import parse, assemble
 
 
+VERILOG_SOURCES = "datapath.v pc.v register.v memory.v control_unit.v register_bank.v alu.v"
+TOPMODEL = "datapath"
+
+
 @cocotb.test()
 async def test_one_register_not(dut):
     test_program = """mov r3 0xf0
@@ -51,7 +55,6 @@ async def test_one_register_not(dut):
 
 @cocotb.test()
 async def test_two_registers_add(dut):
-    import pdb; pdb.set_trace()
     test_program = """mov r3 0xf0
     mov r4 0x01
     add r5 r4 r3
@@ -60,7 +63,6 @@ async def test_two_registers_add(dut):
     test_compiled_program = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.pc.value = Force(0)
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -104,8 +106,11 @@ async def wait_until_diff_ir(dut):
 
 
 async def wait_until_halt(dut):
-    while True:
+    clks_left = 20
+    while clks_left > 0:
         if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
             return
-
+        if clks_left == 0:
+            raise Exception("clks timed out waiting for halt")
+        clks_left-=1
         await FallingEdge(dut.clk)

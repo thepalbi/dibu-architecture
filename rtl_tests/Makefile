@@ -1,19 +1,20 @@
-# Makefile
-
 # defaults
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
+COMPILE_ARGS := -Wall -I $(PWD)/../rtl
 
-# VERILOG_SOURCES += $(PWD)/../rtl/memory.v
-# VERILOG_SOURCES += $(PWD)/../rtl/tb_memory.v
-# VERILOG_SOURCES += $(PWD)/../rtl/constants.v
-# use VHDL_SOURCES for VHDL files
+# extracted from the test files
+TOPLEVEL := $(shell python discover_tests.py $(MODULE) toplevel)
+TESTS := $(shell python discover_tests.py $(MODULE) tests)
+SOURCES := $(shell python discover_tests.py $(MODULE) sources)
 
-# TOPLEVEL is the name of the toplevel module in your Verilog or VHDL file
-# TOPLEVEL = tb_memory
-
-# MODULE is the basename of the Python test file
-# MODULE = test_memory_bank
+VERILOG_SOURCES := $(foreach s,$(SOURCES),$(PWD)/../rtl/$(s))
 
 # include cocotb's make rules to take care of the simulator setup
 include $(shell cocotb-config --makefiles)/Makefile.sim
+
+regression: $(TESTS)
+
+test_%:
+	@echo "Running test: $@"
+	$(MAKE) sim TESTCASE=$@
