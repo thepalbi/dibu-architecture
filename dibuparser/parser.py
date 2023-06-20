@@ -21,6 +21,7 @@ INSTRUCTION_SIZE = 16
 
 CURRENT_DIR = path.dirname(path.realpath(__file__))
 
+
 class ProgramVisitor(Visitor):
     def __init__(self) -> None:
         self._labels = {}
@@ -53,11 +54,13 @@ class ProgramVisitor(Visitor):
             labels=self._labels,
         )
 
+
 class OperandType(Enum):
     REGISTER = "reg"
     IMMEDIATE = "imm"
     MEM_REGISTER = "mem_reg"
     MEM_IMMEDIATE = "mem_imm"
+
 
 @dataclass
 class Instruction:
@@ -75,7 +78,7 @@ class Instruction:
 class Program:
     instructions: List[Instruction]
     labels: Dict[str, int]
-                
+
 
 class CodeLineVisitor(Visitor):
     def __init__(self) -> None:
@@ -102,7 +105,7 @@ class CodeLineVisitor(Visitor):
 
     def parse_immediate(self, value: Tree):
         # todo(pablo): check maximum supported bit length in immediate and fail fast
-        IMMEDIATE_LENGTH=8
+        IMMEDIATE_LENGTH = 8
         match value.data:
             case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
             case "hexa": return Bits(hex=value.children[0].value, length=IMMEDIATE_LENGTH).bin
@@ -125,7 +128,18 @@ class CodeLineVisitor(Visitor):
             operands=self._operands,
         )
 
+
 OT = OperandType
+
+opcode_alu_word_to_idx = {
+    "add": 0,
+    "sub": 1,
+    "and": 2,
+    "or": 3,
+    "lsl": 4,
+    "lsr": 5,
+}
+
 
 def assemble(p: Program, format="binary") -> str:
     """
@@ -138,17 +152,26 @@ def assemble(p: Program, format="binary") -> str:
     result = ""
     for i in p.instructions:
         match i:
-            case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "00111%s00%s000\n" % (asm_register(r1), asm_register(r2))
             case Instruction("mov", [(OT.REGISTER, r1), (OT.IMMEDIATE, imm)]):
                 result += "01000%s%s\n" % (asm_register(r1), imm)
+
+            # alu involved
+
+            case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
+                result += "00111%s00%s000\n" % (asm_register(r1),
+                                                asm_register(r2))
             case Instruction("not", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "00110%s00%s000\n" % (asm_register(r1), asm_register(r2))
+                result += "00110%s00%s000\n" % (asm_register(r1),
+                                                asm_register(r2))
+            case Instruction(alu_op, [(OT.REGISTER, r1), (OT.REGISTER, r2), (OT.REGISTER, r3)]):
+                result += "00%s%s00%s%s\n" % (Bits(uint=opcode_alu_word_to_idx[alu_op], length=3).bin,
+                                              asm_register(r1), asm_register(r2), asm_register(r3))
             case Instruction("halt", []):
                 result += "1"*16 + '\n'
             case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))
 
     return result
+
 
 def asm_register(reg) -> str:
     register_num = int(reg[1:])
@@ -160,15 +183,16 @@ with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
 _parser = Lark(grammar, start="prog")
 
+
 def parse(text: str) -> Program:
     """
     parse parses the given string into a Program object
 
     :param str text: the program to parse
     :return Program: the parsed and processed program
-    """    
+    """
     parsed_tree = _parser.parse(text)
-    
+
     # if debug is enabled, this will print the parsed tree
     log.debug(parsed_tree.pretty())
 
@@ -177,4 +201,3 @@ def parse(text: str) -> Program:
     visitor.visit_topdown(parsed_tree)
 
     return visitor.produce_program()
-    
