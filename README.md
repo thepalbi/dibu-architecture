@@ -20,11 +20,10 @@ sudo apt-get install gtkwave
 
 ## Testing
 
-For all the commands below, first the virtual env needs to be activated by running `source env/bin/activate`.
+For all the commands below, first the virtual env needs to be activated by running `source env/bin/activate`. Also, all commands should be run the following from the repo root.
 
 ### Assembler and parser
 
-Run the following from the repo root.
 ```bash
 make test
 ```
@@ -32,5 +31,5 @@ make test
 ### RTL
 
 ```
-
+make test-rtl
 ```
