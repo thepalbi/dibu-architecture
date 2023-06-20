@@ -10,6 +10,7 @@ label: NAME ":"
 opcode: OPCODE
 
 OPCODE: "mov"
+    | "movf"
     | "add"
     | "sub"
     | "and"
