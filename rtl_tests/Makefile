@@ -5,7 +5,7 @@ COMPILE_ARGS := -Wall -I $(PWD)/../rtl
 
 # extracted from the test files
 TOPLEVEL := $(shell python discover_tests.py $(MODULE) toplevel)
-TESTS := $(shell python discover_tests.py $(MODULE) tests)
+TESTS ?= $(shell python discover_tests.py $(MODULE) tests)
 SOURCES := $(shell python discover_tests.py $(MODULE) sources)
 
 VERILOG_SOURCES := $(foreach s,$(SOURCES),$(PWD)/../rtl/$(s))

@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "constants.v"
+`include "signals.v"
 
 module ctrl_unit(clk, opcode, signals);
     // clk: clock signal
