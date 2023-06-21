@@ -8,3 +8,5 @@
 `define s_reg_sel_in		3
 // flags_w_en: Enable the flags register to be written in the next clock cycle.
 `define s_flags_w_en		4
+// alu_out_select: Pick wether the output from the alu is the alu out (0), or the flags register (1)
+`define s_alu_out_select		5

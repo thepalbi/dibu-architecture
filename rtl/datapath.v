@@ -55,6 +55,11 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // control if the flags should be written from the alu
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
+    // control if the alu out is the result of the alu, or the flags register
+    // 0 alu
+    // 1 flags register out
+    wire alu_out_select;
+    assign alu_out_select = signals[`s_alu_out_select];
 
     
     // pc: program counter
@@ -98,12 +103,13 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     wire [7:0] immediate;
     assign immediate = ir[7:0];
     
-    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
+    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags, alu_out_or_flags;
     wire [7:0] reg_data_in;
 
     assign debug = alu_out;
     
-    assign reg_data_in = reg_select_in ? immediate : alu_out; 
+    assign reg_data_in = reg_select_in ? immediate : alu_out_or_flags; 
+    assign alu_out_or_flags = alu_out_select ? flags : alu_out;
 
     // control unit
     ctrl_unit control(

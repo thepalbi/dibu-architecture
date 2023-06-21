@@ -126,7 +126,7 @@ async def test_movf(dut):
     # memory has been written
     await wait_until_halt(dut)
 
-    assert dut.rbank.bank.value[5] == int("00000010", base=2)
+    assert dut.rbank.bank.value[5] == int("00010010", base=2)
 
 
 async def wait_until_diff_ir(dut):

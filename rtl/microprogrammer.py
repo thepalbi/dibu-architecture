@@ -21,6 +21,7 @@ SUPPORTED_SIGNALS = [
     ("reg_rw", "Enable the register file to be written in the next clock cycle."),
     ("reg_sel_in", "Select the origin of data into the register file."),
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
+    ("alu_out_select", "Pick wether the output from the alu is the alu out (0), or the flags register (1)")
     # hightest significance
 ]
 
@@ -48,6 +49,9 @@ program = [
 
     # mov r, imm
     _(["reg_sel_in", "reg_rw"], goto="fetch"),
+
+    # movf r
+    _(["reg_rw", "alu_out_select"], goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

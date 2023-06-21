@@ -48,6 +48,8 @@ module ctrl_unit(clk, opcode, signals);
                 5'b01000: chosen_next_addr <= `micro_addr_size'd6;
                 // alu operations
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
+                // movf
+                5'b01011: chosen_next_addr <= `micro_addr_size'd7;
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch
