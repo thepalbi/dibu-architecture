@@ -1,6 +1,7 @@
 `timescale 1ns / 1ps
 
 `include "constants.v"
+`include "signals.v"
 
 module ctrl_unit(clk, opcode, signals);
     // clk: clock signal
@@ -8,7 +9,7 @@ module ctrl_unit(clk, opcode, signals);
     // opcode, which corresponds to the ir[15:11] bits
     input [4:0] opcode;
     // signals: output signals from the contorl unit
-    output [4:0] signals;
+    output [`signals_size-1:0] signals;
 
     // todo: parametrize this por favor
     reg [`store_word_size-1:0] store [0:31];
@@ -48,6 +49,8 @@ module ctrl_unit(clk, opcode, signals);
                 5'b01000: chosen_next_addr <= `micro_addr_size'd6;
                 // alu operations
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
+                // movf
+                5'b01011: chosen_next_addr <= `micro_addr_size'd7;
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch

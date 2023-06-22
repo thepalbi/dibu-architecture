@@ -160,6 +160,8 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
                 result += "00111%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))
+            case Instruction("movf", [(OT.REGISTER, r1)]):
+                result += "01011%s00000000\n" % (asm_register(r1))
             case Instruction("not", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
                 result += "00110%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))

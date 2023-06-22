@@ -20,10 +20,3 @@
 // defaults for dibu
 `define DATA_WORD_SIZE 8
 `define DATA_ADDR_SIZE 10
-
-// control unit stuff
-
-`define micro_addr_size     5
-`define signals_size    5
-// +1 for the decision state bit
-`define store_word_size `micro_addr_size+`signals_size+1

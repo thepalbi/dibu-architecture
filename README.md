@@ -5,8 +5,8 @@ DiBU is a processor designed from the grounds up, with it's own [ISA](https://ww
 ## Installation
 
 ```
-sudo apt-get install python-setuptools
-python -m venv env
+sudo apt-get install python3.10 libpython3.10 python-setuptools 
+python3.10 -m venv env
 source env/bin/activate
 pip install -r requirements.txt
 
@@ -32,4 +32,10 @@ make test
 
 ```
 make test-rtl
+```
+
+To run single test, go into `rtl_tests` and run:
+
+```
+TESTS=test_one_register_not ./run_tests.sh
 ```

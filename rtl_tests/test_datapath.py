@@ -90,6 +90,44 @@ async def test_two_registers_add(dut):
 
     assert dut.rbank.bank.value[5] == int("0xf1", base=16)
 
+@cocotb.test()
+async def test_movf(dut):
+    test_program = """mov r3 0x01
+    mov r4 0x00
+    sub r5 r4 r3
+    movf r5
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[5] == int("00010010", base=2)
+
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:
