@@ -21,6 +21,12 @@ SUPPORTED_SIGNALS = [
     ("alu_out_en", "Enable ALU out into data bus"),
     ("flags_en", "Enable flags register into data bus"),
     ("imm_en", "Enable immediate decoded from IR into data bus"),
+    # memory stuff
+    ("dar_w_en", "Enable write to the DAR register"),
+    ("mdr_w_en", "Enable write to the MDR register"),
+    ("mem_w_en", "Enable write to the data memory"),
+    ("mdr_out_en", "Enable MDR into data bus"),
+    ("reg_to_mar", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
     # hightest significance

@@ -63,6 +63,26 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     wire imm_en;
     assign imm_en = signals[`s_imm_en];
 
+    // dar_w_en: Enable write to the DAR register
+    wire dar_w_en;
+    assign dar_w_en = signals[`s_dar_w_en];
+
+    // mdr_w_en: Enable write to the MDR register
+    wire mdr_w_en;
+    assign mdr_w_en = signals[`s_mdr_w_en];
+
+    // mem_w_en: Enable write to the data memory
+    wire mem_w_en;
+    assign mem_w_en = signals[`s_mem_w_en];
+
+    // mdr_out_en: Enable MDR into data bus
+    wire mdr_out_en;
+    assign mdr_out_en = signals[`s_mdr_out_en];
+
+    // reg_to_mar: If selected, register bank out A is selected as MDR in
+    wire reg_to_mar;
+    assign reg_to_mar = signals[`s_reg_to_mar];
+
     // flags_w_en: Enable the flags register to be written in the next clock cycle.
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
@@ -106,6 +126,41 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .d_out(ir)
     );
 
+
+    //
+    // data memory
+    //
+
+    // data address register
+    wire [9:0] dar_out;
+    register dar_register(
+        .clk(clk),
+        .w_en(dar_w_en),
+        .d_in({2'b00, immediate}),
+        .d_out(dar_out)
+    );
+
+    // memory data register
+    wire [7:0] mdr_out;
+    wire [7:0] mdr_in;
+    register mdr_register(
+        .clk(clk),
+        .w_en(mdr_w_en),
+        .d_in(mdr_in),
+        .d_out(mdr_out)
+    );
+
+    assign mdr_in = reg_to_mar ? alu_a : data_mem_out;
+
+    wire [7:0] data_mem_out;
+    memory_bank #(8, 10) data_mem(
+        .clk(clk),
+        .w_en(mem_w_en),
+        .addr(dar_out),
+        .d_in(mdr_out),
+        .d_out(data_mem_out)
+    );
+
     // immediate: immediate word-sized operand from instruction format
     wire [7:0] immediate;
     assign immediate = ir[7:0];
@@ -126,6 +181,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     assign data_bus = alu_out_en ? alu_out : 8'bz;
     assign data_bus = flags_en ? flags : 8'bz;
     assign data_bus = imm_en ? immediate : 8'bz;
+    assign data_bus = mdr_out_en ? mdr_out : 8'bz;
 
     // processing data path
 
