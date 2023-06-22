@@ -33,3 +33,9 @@ make test
 ```
 make test-rtl
 ```
+
+To run single test, go into `rtl_tests` and run:
+
+```
+TESTS=test_one_register_not ./run_tests.sh
+```
