@@ -5,7 +5,7 @@ DiBU is a processor designed from the grounds up, with it's own [ISA](https://ww
 ## Installation
 
 ```
-sudo apt-get install python3.10 python-setuptools 
+sudo apt-get install python3.10 libpython3.10 python-setuptools 
 python3.10 -m venv env
 source env/bin/activate
 pip install -r requirements.txt

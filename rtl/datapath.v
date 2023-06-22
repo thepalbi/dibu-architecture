@@ -61,7 +61,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     wire alu_out_select;
     assign alu_out_select = signals[`s_alu_out_select];
 
-    
     // pc: program counter
     wire [8:0] pc_write_in;
     assign pc_write_in = pc_inc ? pc+1 : pc;
@@ -72,7 +71,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .d_in(pc_write_in),
         .d_out(pc)
     );
-
     // mar: memory address register
     wire [8:0] mar;
     register #(9) mar_register(
@@ -108,8 +106,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
 
     assign debug = alu_out;
     
-    assign reg_data_in = reg_select_in ? immediate : alu_out_or_flags; 
     assign alu_out_or_flags = alu_out_select ? flags : alu_out;
+    assign reg_data_in = reg_select_in ? immediate : alu_out_or_flags; 
 
     // control unit
     ctrl_unit control(

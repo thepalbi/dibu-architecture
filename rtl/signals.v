@@ -5,7 +5,7 @@
 `define micro_addr_size     5
 `define signals_size    6
 // +1 for the decision state bit
-`define store_word_size `micro_addr_size+`signals_size+1
+`define store_word_size 12
 
 // pc_inc: Enable the PC to be incremented in the next clock cycle.
 `define s_pc_inc		0

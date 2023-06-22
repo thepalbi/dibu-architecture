@@ -7,8 +7,6 @@ import argparse
 logging.basicConfig(level=logging.INFO)
 log = logging.getLogger()
 
-ADDR_START_BIT = 6
-MICROINST_LENGHT = 11
 # the following contains all supported signals, in the order they show in the microsintruction
 # each symbol will be allowed in the microprogram file. Also, the first is the lowest bit (0), and
 # the last the highest.
@@ -24,6 +22,10 @@ SUPPORTED_SIGNALS = [
     ("alu_out_select", "Pick wether the output from the alu is the alu out (0), or the flags register (1)")
     # hightest significance
 ]
+ADDR_START_BIT = len(SUPPORTED_SIGNALS)
+# ADDRESS_BITS are the number of bits for the micro instruction address
+ADDRESS_BITS = 5
+MICROINST_LENGHT = len(SUPPORTED_SIGNALS)+ADDRESS_BITS
 
 
 @dataclass
@@ -79,6 +81,7 @@ def compile_microcode() -> str:
                 compiled_line |= symbol_to_mask[sym]
             except KeyError:
                 raise ValueError("unknown symbol %s" % (sym))
+        # microinstr has a goto statement, pick next address from labels
         if instr.goto is not None:
             try:
                 goto_addr = gotos[instr.goto]
@@ -120,7 +123,7 @@ if __name__ == "__main__":
 `define micro_addr_size     %d
 `define signals_size    %d
 // +1 for the decision state bit
-`define store_word_size `micro_addr_size+`signals_size+1\n\n""" % (5, len(SUPPORTED_SIGNALS)-1))
+`define store_word_size %d\n\n""" % (ADDRESS_BITS, len(SUPPORTED_SIGNALS)-1, ADDRESS_BITS+len(SUPPORTED_SIGNALS)))
         for i, [signal, comment] in enumerate(SUPPORTED_SIGNALS):
             if signal == "decision":
                 continue
