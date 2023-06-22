@@ -36,30 +36,39 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // signals are the control unit signals wire
     wire [`signals_size-1:0] signals;
 
-    // control if the pc should be incremented in next rising edge
+    // --------------------------------------------------------------------
+    // START SIGNALS MAPPING - COPY HERE generated code from microprogammer
+
+    // pc_inc: Enable the PC to be incremented in the next clock cycle.
     wire pc_inc;
     assign pc_inc = signals[`s_pc_inc];
-    // control if memory address register should be writtenn 
+
+    // mar_w_en: Enable the MAR (memory address register) to be written in the next clock cycle.
     wire mar_w_en;
     assign mar_w_en = signals[`s_mar_w_en];
-    // control if register bank should read or write
-    // 0 read
-    // 1 write
+
+    // reg_rw: Enable the register file to be written in the next clock cycle.
     wire reg_rw;
     assign reg_rw = signals[`s_reg_rw];
-    // control if register data in should be alu out or immediate from ir
-    // 0 alu
-    // 1 immediatcode_w_ene
-    wire reg_select_in;
-    assign reg_select_in = signals[`s_reg_sel_in];
-    // control if the flags should be written from the alu
+
+    // alu_out_en: Enable ALU out into data bus
+    wire alu_out_en;
+    assign alu_out_en = signals[`s_alu_out_en];
+
+    // flags_en: Enable flags register into data bus
+    wire flags_en;
+    assign flags_en = signals[`s_flags_en];
+
+    // imm_en: Enable immediate decoded from IR into data bus
+    wire imm_en;
+    assign imm_en = signals[`s_imm_en];
+
+    // flags_w_en: Enable the flags register to be written in the next clock cycle.
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
-    // control if the alu out is the result of the alu, or the flags register
-    // 0 alu
-    // 1 flags register out
-    wire alu_out_select;
-    assign alu_out_select = signals[`s_alu_out_select];
+
+    // END SIGNALS
+    // --------------------------------------------------------------------
 
     // pc: program counter
     wire [8:0] pc_write_in;
@@ -101,20 +110,22 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     wire [7:0] immediate;
     assign immediate = ir[7:0];
     
-    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags, alu_out_or_flags;
-    wire [7:0] reg_data_in;
+    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
 
     assign debug = alu_out;
     
-    assign alu_out_or_flags = alu_out_select ? flags : alu_out;
-    assign reg_data_in = reg_select_in ? immediate : alu_out_or_flags; 
-
     // control unit
     ctrl_unit control(
         .clk(clk & run),
         .opcode(ir[15:11]),
         .signals(signals)
     );
+
+    // data bus
+    wire [7:0] data_bus;
+    assign data_bus = alu_out_en ? alu_out : 8'bz;
+    assign data_bus = flags_en ? flags : 8'bz;
+    assign data_bus = imm_en ? immediate : 8'bz;
 
     // processing data path
 
@@ -124,7 +135,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .ri_b(ir[2:0]),
         .ri_d(ir[10:8]),
         .rw(reg_rw),
-        .d(reg_data_in),
+        .d(data_bus),
         .a(alu_a),
         .b(alu_b)
     );

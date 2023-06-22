@@ -16,6 +16,7 @@ for test in $tests; do
         echo "running single test: $TESTS"
         TESTS=$TESTS MODULE=$module make regression
     else
+        unset TESTS
         MODULE=$module make regression
     fi
 done

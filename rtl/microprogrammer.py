@@ -17,9 +17,12 @@ SUPPORTED_SIGNALS = [
     ("mar_w_en", "Enable the MAR (memory address register) to be written in the next clock cycle."),
     # todo: maybe rename to reg_w_en
     ("reg_rw", "Enable the register file to be written in the next clock cycle."),
-    ("reg_sel_in", "Select the origin of data into the register file."),
+    # enables into data bus
+    ("alu_out_en", "Enable ALU out into data bus"),
+    ("flags_en", "Enable flags register into data bus"),
+    ("imm_en", "Enable immediate decoded from IR into data bus"),
+    # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
-    ("alu_out_select", "Pick wether the output from the alu is the alu out (0), or the flags register (1)")
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
@@ -43,17 +46,17 @@ program = [
 
     # mov r, r
     _([]),
-    _(["reg_rw"], goto="fetch"),
+    _(["reg_rw", "alu_out_en"], goto="fetch"),
 
     # op r,r,r
     _([]),
-    _(["flags_w_en", "reg_rw"], goto="fetch"),
+    _(["flags_w_en", "reg_rw", "alu_out_en"], goto="fetch"),
 
     # mov r, imm
-    _(["reg_sel_in", "reg_rw"], goto="fetch"),
+    _(["imm_en", "reg_rw"], goto="fetch"),
 
     # movf r
-    _(["reg_rw", "alu_out_select"], goto="fetch"),
+    _(["reg_rw", "flags_en"], goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")
@@ -132,6 +135,14 @@ if __name__ == "__main__":
 
     log.info("done")
 
-# todo: add code to also generate a signals.v that has which bit is which signal out of the control uni
-# this this is the only file with the actual definition, and in the datapath we can access to signals like
-# signals[`reg_w_en] ?
+    datapath_signals_mapping = ""
+    for i, [signal, comment] in enumerate(SUPPORTED_SIGNALS):
+        if signal == "decision":
+            continue
+        datapath_signals_mapping += "// %s: %s\n" % (signal, comment)
+        datapath_signals_mapping += "wire %s;\n" % (signal)
+        datapath_signals_mapping += f"assign {signal} = signals[`s_{signal}];\n"
+        datapath_signals_mapping += "\n"
+
+    print("copy this bit into the datapath definition")
+    print(datapath_signals_mapping)
