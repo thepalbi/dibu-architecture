@@ -133,10 +133,30 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
 
     // data address register
     wire [9:0] dar_out;
-    register dar_register(
+
+    // select the DAR data_in based on the opcode
+    // less control signals
+    reg [9:0] dar_addr_selection;
+
+    `define direct_load 5'b10000
+    `define direct_store 5'b10001
+    `define indirect_load 5'b10010
+    `define indirect_store 5'b10011
+    always @ (*) begin
+        casex (opcode)
+            `direct_load: dar_addr_selection <= immediate;
+            `direct_store: dar_addr_selection <= ir[10:3];
+            `indirect_load: dar_addr_selection <= alu_a;
+            `indirect_store: dar_addr_selection <= alu_a;
+            // default to zero
+            default: dar_addr_selection <= 8'd0;
+        endcase
+    end
+
+    register #(10) dar_register(
         .clk(clk),
         .w_en(dar_w_en),
-        .d_in({2'b00, immediate}),
+        .d_in({00, dar_addr_selection}),
         .d_out(dar_out)
     );
 
@@ -150,7 +170,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .d_out(mdr_out)
     );
 
-    assign mdr_in = reg_to_mar ? alu_a : data_mem_out;
+    assign mdr_in = reg_to_mar ? alu_b : data_mem_out;
 
     wire [7:0] data_mem_out;
     memory_bank #(8, 10) data_mem(
@@ -169,10 +189,12 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
 
     assign debug = alu_out;
     
+    wire [4:0] opcode;
+    assign opcode = ir[15:11];
     // control unit
     ctrl_unit control(
         .clk(clk & run),
-        .opcode(ir[15:11]),
+        .opcode(opcode),
         .signals(signals)
     );
 
