@@ -93,6 +93,6 @@ module ctrl_unit(clk, opcode, flags, signals);
     // sequential block
     always @ (posedge clk) begin
         current <= store[chosen_next_addr];
-        $display("microinstr: %h", chosen_next_addr);
+        //$display("microinstr: %h", chosen_next_addr);
     end
 endmodule

@@ -16,6 +16,10 @@ SUPPORTED_SIGNALS = [
     ("decision", "When enabled, means we are in the decision state of the control unit."),
     ("ir_w_en", "Enable the IR register to be written"),
     ("pc_w_en", "Enable the PC to be written in the next cycle"),
+    ("pc_inc", "Enable the PC to be incremented in the next clock cycle."),
+    ("pc_ref_inc", "Enable the PC reference to be incremented in the next clock cycle."),
+    ("pc_ref_dec", "Enable the PC reference to be decremented in the next clock cycle."),
+    ("pc_set", "Enable the PC to be set in the next clock cycle."),
     ("mar_w_en", "Enable the MAR (memory address register) to be written in the next clock cycle."),
     # todo: maybe rename to reg_w_en
     ("reg_rw", "Enable the register file to be written in the next clock cycle."),
@@ -89,6 +93,14 @@ program = [
 
     # jump taken. This can be used for the unconditional jump, or the control unit to send conditional jumps here
     _(["jump_ok", "pc_w_en"], goto="fetch", label="jump_taken"),
+
+    # call imm
+    _(["pc_ref_inc"]),
+    _(["pc_set"], goto="fetch"),
+
+    # ret
+    _(["pc_ref_dec"]),
+    _([], goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

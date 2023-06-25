@@ -11,7 +11,7 @@ sys.path.append(path.join(CURRENT_DIR, "../"))
 from dibuparser import parse, assemble
 
 
-VERILOG_SOURCES = "datapath.v pc.v register.v memory.v control_unit.v register_bank.v alu.v"
+VERILOG_SOURCES = "datapath.v pc_module.v register.v memory.v control_unit.v register_bank.v alu.v"
 TOPMODEL = "datapath"
 
 
@@ -43,8 +43,6 @@ async def test_one_register_not(dut):
 
     dut.code_w_en.value = 0
     dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
 
     # memory has been written
     await wait_until_halt(dut)
@@ -83,8 +81,6 @@ async def test_two_registers_add(dut):
     dut.code_w_en.value = 0
     dut.run.value = 1
 
-    dut._log.info("arranco a ejecutar")
-
     # memory has been written
     await wait_until_halt(dut)
 
@@ -120,8 +116,6 @@ async def test_movf(dut):
 
     dut.code_w_en.value = 0
     dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
 
     # memory has been written
     await wait_until_halt(dut)
@@ -305,6 +299,7 @@ async def test_simple_jump_not_taken(dut):
 
     dut.run.value = 0
     dut.code_w_en.value = 0
+
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     # wait a bit, 2 clk cycles
@@ -373,6 +368,57 @@ async def test_count_to_30(dut):
 
     assert dut.rbank.bank.value[1] == 30
 
+@cocotb.test()
+async def test_call_and_ret(dut):
+    test_program = """call 0x03
+    mov r3 0x12
+    halt
+    mov r4 0x23
+    ret 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut, max_clks=1000)
+
+    assert dut.rbank.bank.value[4] == int("0x23", base=16)
+    assert dut.rbank.bank.value[3] == int("0x12", base=16)
+
+
+async def wait_until_halt(dut, max_clks = 100):
+    clks_left = max_clks
+    while clks_left > 0:
+        if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
+            return
+        if clks_left == 0:
+            raise Exception("clks timed out waiting for halt")
+        clks_left-=1
+        await FallingEdge(dut.clk)
+
+
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:
@@ -385,15 +431,4 @@ async def wait_until_diff_ir(dut):
             return
         current_ir = dut.ir.value
         dut._log.info("ir still the same, waiting!")
-        await FallingEdge(dut.clk)
-
-
-async def wait_until_halt(dut, max_clks = 100):
-    clks_left = max_clks
-    while clks_left > 0:
-        if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
-            return
-        if clks_left == 0:
-            raise Exception("clks timed out waiting for halt")
-        clks_left-=1
         await FallingEdge(dut.clk)

@@ -6,22 +6,90 @@ VERILOG_SOURCES = "pc_module.v"
 TOPMODEL = "pc_module"
 
 @cocotb.test()
-async def set_pc_to_desired_value2(dut):
+async def test_set_pc_to_desired_value(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     # wait a bit, 2 clk cycles
     await Timer(20, units="ns")
 
-    # after falling edge, write first register
     await FallingEdge(dut.clk)
-    dut.inc.value = 1
+    dut.pc_ref_inc.value = 1
+    dut.pc_set_value.value = int("0x10f", base=16)
 
-    # after falling edge, read register
     await FallingEdge(dut.clk)
-    dut.inc.value = 0
+    dut.pc_ref_inc.value = 0
+    dut.pc_set.value = 1
 
-    await RisingEdge(dut.clk)
-    # wait for the middle of rising edge
-    await Timer(2, units="ns")
+    await FallingEdge(dut.clk)
+    dut.pc_set.value = 0
 
-    assert dut.pc_out == 1
+    await FallingEdge(dut.clk)
+
+    assert dut.pc_out.value == int("0x10f", base=16)
+    assert dut.pc_bank[0].value == int("0x0", base=16)
+
+@cocotb.test()
+async def test_error_when_pc_ref_above_limit(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref.value = int("0x7", base=16)
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_inc.value = 1
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_inc.value = 0
+
+    await FallingEdge(dut.clk)
+
+    assert dut.err.value == 1
+
+@cocotb.test()
+async def test_error_when_pc_ref_below_limit(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_dec.value = 1
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_dec.value = 0
+
+    await FallingEdge(dut.clk)
+
+    assert dut.err.value == 1
+
+#!FIXME: test doesn't work because it's using previous dut.
+@cocotb.test()
+async def test_inc_only_increments_current_pc(dut):
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_inc.value = 1
+
+    await FallingEdge(dut.clk)
+    dut.pc_ref_inc.value = 0
+    dut.pc_inc.value = 1
+
+    await FallingEdge(dut.clk)
+    dut.pc_inc.value = 0
+
+    await FallingEdge(dut.clk)
+    dut.pc_inc.value = 1
+
+    await FallingEdge(dut.clk)
+    dut.pc_inc.value = 0
+
+    assert dut.pc_bank[0].value == int("0x0", base=16)
+    assert dut.pc_bank[1].value == int("0x2", base=16)
+    assert dut.pc_bank[2].value == int("0x0", base=16)
+    assert dut.err.value == 0
