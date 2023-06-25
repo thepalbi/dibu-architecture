@@ -168,6 +168,10 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction(alu_op, [(OT.REGISTER, r1), (OT.REGISTER, r2), (OT.REGISTER, r3)]):
                 result += "00%s%s00%s%s\n" % (Bits(uint=opcode_alu_word_to_idx[alu_op], length=3).bin,
                                               asm_register(r1), asm_register(r2), asm_register(r3))
+            case Instruction("load", [(OT.REGISTER, r1), (OT.IMMEDIATE, addr)]):
+                result += "10000%s%s\n" % (asm_register(r1), addr)
+            case Instruction("str", [(OT.IMMEDIATE, addr), (OT.REGISTER, r1)]):
+                result += "10001%s%s\n" % (addr, asm_register(r1))
             case Instruction("halt", []):
                 result += "1"*16 + '\n'
             case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))

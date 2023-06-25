@@ -18,6 +18,8 @@ OPCODE: "mov"
     | "lsl"
     | "lsr"
     | "not"
+    | "str"
+    | "load"
     | "halt"
 
 operands: operand*

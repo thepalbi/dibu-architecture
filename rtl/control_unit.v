@@ -34,7 +34,13 @@ module ctrl_unit(clk, opcode, signals);
     // load microprogram in rom
     initial begin
         $display("reading microprogram into store");
+        // if in cocotb test load from here
+        `ifdef COCOTB_SIM
         $readmemb("../rtl/microprogram_clean.mem", store);
+        `else
+        // if compiling without cocos read from current dir
+        $readmemb("./microprogram_clean.mem", store);
+        `endif
         current = 'd0;
     end
 
@@ -51,6 +57,10 @@ module ctrl_unit(clk, opcode, signals);
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
                 // movf
                 5'b01011: chosen_next_addr <= `micro_addr_size'd7;
+                // load direct
+                5'b10000: chosen_next_addr <= `micro_addr_size'd8;
+                // store direct
+                5'b10001: chosen_next_addr <= `micro_addr_size'd11;
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch

@@ -25,9 +25,9 @@ SUPPORTED_SIGNALS = [
     # memory stuff
     ("dar_w_en", "Enable write to the DAR register"),
     ("mdr_w_en", "Enable write to the MDR register"),
-    ("mem_w_en", "Enable write to the data memory"),
+    ("dmem_w_en", "Enable write to the data memory"),
     ("mdr_out_en", "Enable MDR into data bus"),
-    ("reg_to_mar", "If selected, register bank out A is selected as MDR in"),
+    ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
     # hightest significance
@@ -52,18 +52,28 @@ program = [
     _([], goto="decision"),
 
     # mov r, r
-    _([]),
+    _([], label="move-reg-reg"),
     _(["reg_rw", "alu_out_en"], goto="fetch"),
 
     # op r,r,r
-    _([]),
+    _([], label="alu-ops"),
     _(["flags_w_en", "reg_rw", "alu_out_en"], goto="fetch"),
 
     # mov r, imm
-    _(["imm_en", "reg_rw"], goto="fetch"),
+    _(["imm_en", "reg_rw"], goto="fetch", label="mov-reg-imm"),
 
     # movf r
-    _(["reg_rw", "flags_en"], goto="fetch"),
+    _(["reg_rw", "flags_en"], goto="fetch", label="movf"),
+
+    # load r1 imm
+    _(["dar_w_en"], label="load-direct"),  # write DAR
+    _(["mdr_w_en"]),  # write output from data memory into MDR
+    _(["mdr_out_en", "reg_rw"], goto="fetch"),
+
+    # str imm r1
+    _(["dar_w_en"], label="store-direct"), # load DAR and wait for data register to be read
+    _(["reg_to_mdr", "mdr_w_en"]), # write data register into MDR
+    _(["dmem_w_en"], goto="fetch"), # write memory
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")
@@ -154,3 +164,6 @@ if __name__ == "__main__":
 
     print("copy this bit into the datapath definition")
     print(datapath_signals_mapping)
+
+    print("GOTOs map to complete control unit")
+    print(gotos)

@@ -33,13 +33,13 @@
 `define s_mdr_w_en        7
 
 // Enable write to the data memory
-`define s_mem_w_en        8
+`define s_dmem_w_en        8
 
 // Enable MDR into data bus
 `define s_mdr_out_en        9
 
 // If selected, register bank out A is selected as MDR in
-`define s_reg_to_mar        10
+`define s_reg_to_mdr        10
 
 // Enable the flags register to be written in the next clock cycle.
 `define s_flags_w_en        11

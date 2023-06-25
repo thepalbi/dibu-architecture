@@ -71,17 +71,17 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     wire mdr_w_en;
     assign mdr_w_en = signals[`s_mdr_w_en];
 
-    // mem_w_en: Enable write to the data memory
-    wire mem_w_en;
-    assign mem_w_en = signals[`s_mem_w_en];
+    // dmem_w_en: Enable write to the data memory
+    wire dmem_w_en;
+    assign dmem_w_en = signals[`s_dmem_w_en];
 
     // mdr_out_en: Enable MDR into data bus
     wire mdr_out_en;
     assign mdr_out_en = signals[`s_mdr_out_en];
 
-    // reg_to_mar: If selected, register bank out A is selected as MDR in
-    wire reg_to_mar;
-    assign reg_to_mar = signals[`s_reg_to_mar];
+    // reg_to_mdr: If selected, register bank out A is selected as MDR in
+    wire reg_to_mdr;
+    assign reg_to_mdr = signals[`s_reg_to_mdr];
 
     // flags_w_en: Enable the flags register to be written in the next clock cycle.
     wire flags_w_en;
@@ -126,7 +126,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .d_out(ir)
     );
 
-
     //
     // data memory
     //
@@ -145,7 +144,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     always @ (*) begin
         casex (opcode)
             `direct_load: dar_addr_selection <= immediate;
-            `direct_store: dar_addr_selection <= ir[10:3];
+            `direct_store: dar_addr_selection <= ir[10:3]; // immediate for memory is addr is on 10:3
             `indirect_load: dar_addr_selection <= alu_a;
             `indirect_store: dar_addr_selection <= alu_a;
             // default to zero
@@ -153,10 +152,13 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         endcase
     end
 
+    wire [9:0] dar_data_in;
+    assign dar_data_in = {2'd0, dar_addr_selection};
+
     register #(10) dar_register(
         .clk(clk),
         .w_en(dar_w_en),
-        .d_in({00, dar_addr_selection}),
+        .d_in(dar_data_in),
         .d_out(dar_out)
     );
 
@@ -170,12 +172,12 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
         .d_out(mdr_out)
     );
 
-    assign mdr_in = reg_to_mar ? alu_b : data_mem_out;
+    assign mdr_in = reg_to_mdr ? alu_b : data_mem_out;
 
     wire [7:0] data_mem_out;
     memory_bank #(8, 10) data_mem(
         .clk(clk),
-        .w_en(mem_w_en),
+        .w_en(dmem_w_en),
         .addr(dar_out),
         .d_in(mdr_out),
         .d_out(data_mem_out)
