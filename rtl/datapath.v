@@ -39,6 +39,10 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // --------------------------------------------------------------------
     // START SIGNALS MAPPING - COPY HERE generated code from microprogammer
 
+    // ir_w_en: Enable the IR register to be written
+    wire ir_w_en;
+    assign ir_w_en = signals[`s_ir_w_en];
+
     // pc_inc: Enable the PC to be incremented in the next clock cycle.
     wire pc_inc;
     assign pc_inc = signals[`s_pc_inc];
@@ -115,15 +119,22 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     
     // ir: instruction register
     wire [15:0] ir;
+    register #(16) ir_register(
+        .clk(clk),
+        .w_en(ir_w_en),
+        .d_in(code_mem_out),
+        .d_out(ir)
+    );
 
     always @ (posedge clk) $display("el ir es: %h", ir);
 
+    wire [15:0] code_mem_out;
     memory_bank #(16, 9) code_mem(
         .clk(clk),
         .w_en(code_w_en),
         .addr(code_w_en ? code_addr_in : mar),
         .d_in(code_in),
-        .d_out(ir)
+        .d_out(code_mem_out)
     );
 
     //

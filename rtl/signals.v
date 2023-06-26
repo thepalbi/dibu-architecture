@@ -3,43 +3,46 @@
 //
 
 `define micro_addr_size     5
-`define signals_size    12
+`define signals_size    13
 // +1 for the decision state bit
-`define store_word_size 18
+`define store_word_size 19
 
+
+// Enable the IR register to be written
+`define s_ir_w_en        0
 
 // Enable the PC to be incremented in the next clock cycle.
-`define s_pc_inc        0
+`define s_pc_inc        1
 
 // Enable the MAR (memory address register) to be written in the next clock cycle.
-`define s_mar_w_en        1
+`define s_mar_w_en        2
 
 // Enable the register file to be written in the next clock cycle.
-`define s_reg_rw        2
+`define s_reg_rw        3
 
 // Enable ALU out into data bus
-`define s_alu_out_en        3
+`define s_alu_out_en        4
 
 // Enable flags register into data bus
-`define s_flags_en        4
+`define s_flags_en        5
 
 // Enable immediate decoded from IR into data bus
-`define s_imm_en        5
+`define s_imm_en        6
 
 // Enable write to the DAR register
-`define s_dar_w_en        6
+`define s_dar_w_en        7
 
 // Enable write to the MDR register
-`define s_mdr_w_en        7
+`define s_mdr_w_en        8
 
 // Enable write to the data memory
-`define s_dmem_w_en        8
+`define s_dmem_w_en        9
 
 // Enable MDR into data bus
-`define s_mdr_out_en        9
+`define s_mdr_out_en        10
 
 // If selected, register bank out A is selected as MDR in
-`define s_reg_to_mdr        10
+`define s_reg_to_mdr        11
 
 // Enable the flags register to be written in the next clock cycle.
-`define s_flags_w_en        11
+`define s_flags_w_en        12

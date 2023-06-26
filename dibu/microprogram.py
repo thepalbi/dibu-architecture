@@ -14,6 +14,7 @@ log = logging.getLogger()
 SUPPORTED_SIGNALS = [
     # least significant bit
     ("decision", "When enabled, means we are in the decision state of the control unit."),
+    ("ir_w_en", "Enable the IR register to be written"),
     ("pc_inc", "Enable the PC to be incremented in the next clock cycle."),
     ("mar_w_en", "Enable the MAR (memory address register) to be written in the next clock cycle."),
     # todo: maybe rename to reg_w_en
@@ -49,7 +50,7 @@ _ = MicroInstruction
 
 program = [
     _(["mar_w_en", "pc_inc"], label="fetch"),
-    _([], goto="decision"),
+    _(["ir_w_en"], goto="decision"),
 
     # mov r, r
     _([], label="move-reg-reg"),
@@ -65,11 +66,18 @@ program = [
     # movf r
     _(["reg_rw", "flags_en"], goto="fetch", label="movf"),
 
+    # load r1 r2
+    # since both direct and indirect load share a bunch of micro-instructions, re-use
+    _([], label="load-indirect"), # wait for ra from register bank to be read
     # load r1 imm
     _(["dar_w_en"], label="load-direct"),  # write DAR
     _(["mdr_w_en"]),  # write output from data memory into MDR
     _(["mdr_out_en", "reg_rw"], goto="fetch"),
 
+
+    # str r1 r2
+    # since both direct and indirect store share a bunch of micro-instructions, re-use
+    _([], label="store-indirect"), # wait for ra from register bank to be read
     # str imm r1
     _(["dar_w_en"], label="store-direct"), # load DAR and wait for data register to be read
     _(["reg_to_mdr", "mdr_w_en"]), # write data register into MDR

@@ -57,10 +57,14 @@ module ctrl_unit(clk, opcode, signals);
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
                 // movf
                 5'b01011: chosen_next_addr <= `micro_addr_size'd7;
+                // load indirect
+                5'b10010: chosen_next_addr <= `micro_addr_size'd8;
                 // load direct
-                5'b10000: chosen_next_addr <= `micro_addr_size'd8;
+                5'b10000: chosen_next_addr <= `micro_addr_size'd9;
+                // store indirect
+                5'b10011: chosen_next_addr <= `micro_addr_size'd12;
                 // store direct
-                5'b10001: chosen_next_addr <= `micro_addr_size'd11;
+                5'b10001: chosen_next_addr <= `micro_addr_size'd13;
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch
