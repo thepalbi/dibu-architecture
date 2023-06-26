@@ -27,7 +27,8 @@ module memory_bank #(
     // main memory bank
     reg [word_size-1:0] bank [0:(2 ** addr_size)-1];
 
-    assign d_out = bank[addr];
+    always @ (*)
+        d_out <= bank[addr];
 
     always @ (posedge clk) begin
         if (w_en)
