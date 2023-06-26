@@ -2,8 +2,11 @@ prog: (line EOL)+
 
 line: COMMENT -> comment
     | code
+    | variable
 
 code: label? opcode operands COMMENT?
+
+variable: NAME "=" immediate COMMENT?
 
 label: NAME ":"
 
@@ -29,6 +32,7 @@ operands: operand*
 ?operand: REG_NAME  -> register_operand
     | immediate     -> immediate_operand
     | NAME          -> label_operand
+    | "[" NAME "]"  -> variable_mem_operand
     | address
 
 ?address: "[" address_mode "]"

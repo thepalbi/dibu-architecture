@@ -101,20 +101,20 @@ class ParserTest(unittest.TestCase):
                     (OperandType.IMMEDIATE, "0"*8),
                 ]),
                 Instruction("jmp", [
-                    (OperandType.LABEL, "start"),
+                    (OperandType.LABELOrVAR, "start"),
                 ]),
                 Instruction("halt", []),
                 Instruction("jmp", [
-                    (OperandType.LABEL, "end"),
+                    (OperandType.LABELOrVAR, "end"),
                 ]),
                 Instruction("je", [
-                    (OperandType.LABEL, "end"),
+                    (OperandType.LABELOrVAR, "end"),
                 ]),
                 Instruction("jne", [
-                    (OperandType.LABEL, "end"),
+                    (OperandType.LABELOrVAR, "end"),
                 ]),
                 Instruction("jn", [
-                    (OperandType.LABEL, "end"),
+                    (OperandType.LABELOrVAR, "end"),
                 ]),
             ],
             labels={
@@ -167,3 +167,17 @@ class ParserTest(unittest.TestCase):
             assemble(parsed_program)
         # log the exception
         print(ctx.exception)
+
+
+    def test_parser_with_variables_use(self):
+        example = """MODE = 0xf0
+        str [MODE] 0x0f
+        """
+        prog = parse(example)
+        expected = Program(
+            instructions=[
+                Instruction("str", [(OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")])
+            ],
+            labels={},
+        )
+        self.assertEqual(prog, expected)

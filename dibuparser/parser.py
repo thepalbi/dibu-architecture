@@ -1,4 +1,4 @@
-from lark import Lark, Visitor, Tree, Token
+from lark import Lark, Visitor, Tree, Token, Transformer
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
 from os import path
@@ -23,7 +23,8 @@ CURRENT_DIR = path.dirname(path.realpath(__file__))
 
 
 class ProgramVisitor(Visitor):
-    def __init__(self) -> None:
+    def __init__(self, resolved_vars: Dict[str, str]) -> None:
+        self._resolved_vars = resolved_vars
         self._labels = {}
         self._instructions = []
         self._comments = []
@@ -31,7 +32,7 @@ class ProgramVisitor(Visitor):
         super().__init__()
 
     def code(self, code_tree):
-        code_visitor = CodeLineVisitor()
+        code_visitor = CodeLineVisitor(self._resolved_vars)
         # visit code and create instruction
         code_visitor.visit_topdown(code_tree)
         self._instructions.append(code_visitor.produce_instruction())
@@ -85,9 +86,20 @@ class Program:
         except KeyError:
             raise ValueError("unknown label %s" % (label))
 
+class ImmediateFriendlyVisitor(Visitor):
+    def parse_immediate(self, value: Tree):
+        # todo(pablo): check maximum supported bit length in immediate and fail fast
+        IMMEDIATE_LENGTH = 8
+        match value.data:
+            case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
+            case "hexa": return Bits(hex=value.children[0].value, length=IMMEDIATE_LENGTH).bin
+            case "decimal": return Bits(int=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
+            case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
 
-class CodeLineVisitor(Visitor):
-    def __init__(self) -> None:
+
+class CodeLineVisitor(ImmediateFriendlyVisitor):
+    def __init__(self, resolved_vars: Dict[str, str]) -> None:
+        self._resolved_vars = resolved_vars
         self._operands = []
         super().__init__()
 
@@ -115,15 +127,6 @@ class CodeLineVisitor(Visitor):
             (OperandType.LABEL, value)
         )
 
-    def parse_immediate(self, value: Tree):
-        # todo(pablo): check maximum supported bit length in immediate and fail fast
-        IMMEDIATE_LENGTH = 8
-        match value.data:
-            case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
-            case "hexa": return Bits(hex=value.children[0].value, length=IMMEDIATE_LENGTH).bin
-            case "decimal": return Bits(int=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
-            case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
-
     def mem_indirect(self, reg: Tree):
         self._operands.append(
             (OperandType.MEM_REGISTER, reg.children[0].value)
@@ -132,6 +135,13 @@ class CodeLineVisitor(Visitor):
     def mem_direct(self, imm: Tree):
         self._operands.append(
             (OperandType.MEM_IMMEDIATE, self.parse_immediate(imm.children[0]))
+        )
+
+    # for now variables can just be used for direct memory accesses
+    def variable_mem_operand(self, nd: Tree):
+        resolved_value = self._resolved_vars[nd.children[0].value]
+        self._operands.append(
+            (OperandType.MEM_IMMEDIATE, resolved_value)
         )
 
     def produce_instruction(self) -> Instruction:
@@ -225,6 +235,17 @@ with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
 _parser = Lark(grammar, start="prog")
 
+class VariablesVisitor(ImmediateFriendlyVisitor):
+    def __init__(self) -> None:
+        self.vars = {}
+        super().__init__()
+
+    def variable(self, nd: Tree):
+        var_name_token: Token = nd.children[0]
+        immediate_subtree: Tree = nd.children[1]
+        parsed_immediate_value = self.parse_immediate(immediate_subtree)
+        self.vars[var_name_token.value] = parsed_immediate_value
+
 
 def parse(text: str) -> Program:
     """
@@ -234,12 +255,14 @@ def parse(text: str) -> Program:
     :return Program: the parsed and processed program
     """
     parsed_tree = _parser.parse(text)
+    vars_visitor = VariablesVisitor()
+    vars_visitor.visit_topdown(parsed_tree)
 
     # if debug is enabled, this will print the parsed tree
     log.debug(parsed_tree.pretty())
 
     print("compiling tree")
-    visitor = ProgramVisitor()
+    visitor = ProgramVisitor(vars_visitor.vars)
     visitor.visit_topdown(parsed_tree)
 
     return visitor.produce_program()
