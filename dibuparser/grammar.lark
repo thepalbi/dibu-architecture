@@ -3,7 +3,7 @@ prog: (line EOL)+
 line: COMMENT -> comment
     | code
 
-code: label? opcode operands
+code: label? opcode operands COMMENT?
 
 label: NAME ":"
 

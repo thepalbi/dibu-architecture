@@ -79,8 +79,9 @@ class ParserTest(unittest.TestCase):
         self.assertEqual(prog, expected)
 
     def test_parser_calculates_label_map_correctly(self):
-        example = """start: mov r1 0x0f
+        example = """start: mov r1 0x0f ; test comment
         mov r1 0d0
+        ; this is a comment in the middle of the program
         jmp start
         end: halt
         jmp end
