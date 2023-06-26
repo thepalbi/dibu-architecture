@@ -286,6 +286,51 @@ async def test_simple_jumps_program(dut):
     assert dut.rbank.bank.value[3] == int("0xde", base=16)
 
 @cocotb.test()
+async def test_simple_jump_not_taken(dut):
+    """
+    the program will check if two registers are equal, and jump to save a value in that case
+    """
+    test_program = """mov r0 0x15
+    mov r1 0x14
+    sub r1 r1 r0 ; this should be zero
+    je expected
+    ; this line is reached if the jump is not taken
+    mov r3 0x50
+    halt 
+    expected: mov r3 0xde
+    halt
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[3] == int("0x50", base=16)
+
+@cocotb.test()
 async def test_count_to_30(dut):
     """
     the program will check if two registers are equal, and jump to save a value in that case
