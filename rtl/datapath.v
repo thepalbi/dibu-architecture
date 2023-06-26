@@ -37,9 +37,9 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     wire ir_w_en;
     assign ir_w_en = signals[`s_ir_w_en];
 
-    // pc_inc: Enable the PC to be incremented in the next clock cycle.
-    wire pc_inc;
-    assign pc_inc = signals[`s_pc_inc];
+    // pc_w_en: Enable the PC to be written in the next cycle
+    wire pc_w_en;
+    assign pc_w_en = signals[`s_pc_w_en];
 
     // mar_w_en: Enable the MAR (memory address register) to be written in the next clock cycle.
     wire mar_w_en;
@@ -85,16 +85,20 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
 
+    // jump_ok: Enable a jump to be taken, and the PC data in to be the jump immediate
+    wire jump_ok;
+    assign jump_ok = signals[`s_jump_ok];
+
     // END SIGNALS
     // --------------------------------------------------------------------
 
     // pc: program counter
     wire [8:0] pc_write_in;
-    assign pc_write_in = pc_inc ? pc+1 : pc;
+    assign pc_write_in = jump_ok ? ir[8:0] : pc+1;
     wire [8:0] pc;
     register #(9) pc_register(
         .clk(clk),
-        .w_en(pc_inc),
+        .w_en(pc_w_en),
         .d_in(pc_write_in),
         .d_out(pc)
     );
@@ -201,6 +205,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     ctrl_unit control(
         .clk(clk & run),
         .opcode(opcode),
+        .flags(flags),
         .signals(signals)
     );
 

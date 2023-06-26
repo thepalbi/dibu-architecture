@@ -78,6 +78,65 @@ class ParserTest(unittest.TestCase):
         )
         self.assertEqual(prog, expected)
 
+    def test_parser_calculates_label_map_correctly(self):
+        example = """start: mov r1 0x0f ; test comment
+        mov r1 0d0
+        ; this is a comment in the middle of the program
+        jmp start
+        end: halt
+        jmp end
+        je end
+        jne end
+        jn end
+        """
+        prog = parse(example)
+        expected = Program(
+            instructions=[
+                Instruction("mov", [
+                    (OperandType.REGISTER, "r1"),
+                    (OperandType.IMMEDIATE, "00001111"),
+                ]),
+                Instruction("mov", [
+                    (OperandType.REGISTER, "r1"),
+                    (OperandType.IMMEDIATE, "0"*8),
+                ]),
+                Instruction("jmp", [
+                    (OperandType.LABEL, "start"),
+                ]),
+                Instruction("halt", []),
+                Instruction("jmp", [
+                    (OperandType.LABEL, "end"),
+                ]),
+                Instruction("je", [
+                    (OperandType.LABEL, "end"),
+                ]),
+                Instruction("jne", [
+                    (OperandType.LABEL, "end"),
+                ]),
+                Instruction("jn", [
+                    (OperandType.LABEL, "end"),
+                ]),
+            ],
+            labels={
+                "start": 0,
+                "end": 3,
+            },
+        )
+        self.assertEqual(prog, expected)
+        expected = prepare_binary("""
+        0100000100001111
+        0100000100000000
+        1100000000000000
+        1111111111111111
+        1100000000000011
+        1100100000000011
+        1101000000000011
+        1101100000000011
+        """)
+        assembled_program = assemble(prog)
+        self.assertEqual(expected, assembled_program)
+
+
     def test_parse_error(self):
         example = """mov r1 0jd0129
         """

@@ -3,7 +3,7 @@ prog: (line EOL)+
 line: COMMENT -> comment
     | code
 
-code: label? opcode operands
+code: label? opcode operands COMMENT?
 
 label: NAME ":"
 
@@ -18,8 +18,10 @@ OPCODE: "mov"
     | "lsl"
     | "lsr"
     | "not"
-    | "str"
-    | "load"
+    // memory
+    | "str" | "load"
+    // jumps
+    | "jmp" | "je" | "jne" | "jn"
     | "halt"
 
 operands: operand*
@@ -46,10 +48,12 @@ IMM_DECI: "0d" DIGIT+
 
 EOL: "\n"
 
-NAME: ("a".."z" | "_" | "A".."Z")+
+NAME: CNAME
+
 
 COMMENT: /;[^\n]*/ 
 WHITESPACE: " "
 %ignore WHITESPACE
 
 %import common.DIGIT
+%import common.CNAME

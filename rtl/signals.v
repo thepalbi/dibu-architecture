@@ -3,16 +3,16 @@
 //
 
 `define micro_addr_size     5
-`define signals_size    13
+`define signals_size    14
 // +1 for the decision state bit
-`define store_word_size 19
+`define store_word_size 20
 
 
 // Enable the IR register to be written
 `define s_ir_w_en        0
 
-// Enable the PC to be incremented in the next clock cycle.
-`define s_pc_inc        1
+// Enable the PC to be written in the next cycle
+`define s_pc_w_en        1
 
 // Enable the MAR (memory address register) to be written in the next clock cycle.
 `define s_mar_w_en        2
@@ -46,3 +46,6 @@
 
 // Enable the flags register to be written in the next clock cycle.
 `define s_flags_w_en        12
+
+// Enable a jump to be taken, and the PC data in to be the jump immediate
+`define s_jump_ok        13

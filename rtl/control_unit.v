@@ -3,11 +3,12 @@
 `include "constants.v"
 `include "signals.v"
 
-module ctrl_unit(clk, opcode, signals);
+module ctrl_unit(clk, opcode, flags, signals);
     // clk: clock signal
     input clk;
     // opcode, which corresponds to the ir[15:11] bits
     input [4:0] opcode;
+    input [7:0] flags;
     // signals: output signals from the contorl unit
     output [`signals_size-1:0] signals;
 
@@ -65,6 +66,19 @@ module ctrl_unit(clk, opcode, signals);
                 5'b10011: chosen_next_addr <= `micro_addr_size'd12;
                 // store direct
                 5'b10001: chosen_next_addr <= `micro_addr_size'd13;
+                // jumps logic
+                5'b11???: begin
+                    // possible targets
+                    `define JUMP_TAKEN `micro_addr_size'd17
+                    `define FETCH `micro_addr_size'd0
+                    if ((opcode[2:0] === 3'd0) |
+                        (opcode[2:0] === `JE & flags[`FLAG_ZERO]) |
+                        (opcode[2:0] === `JNE & ~flags[`FLAG_ZERO]) |
+                        (opcode[2:0] === `JN & flags[`FLAG_NEGATIVE]))
+                        chosen_next_addr <= `JUMP_TAKEN;
+                    else
+                        chosen_next_addr <= `FETCH;
+                end
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch

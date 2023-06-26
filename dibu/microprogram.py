@@ -15,7 +15,7 @@ SUPPORTED_SIGNALS = [
     # least significant bit
     ("decision", "When enabled, means we are in the decision state of the control unit."),
     ("ir_w_en", "Enable the IR register to be written"),
-    ("pc_inc", "Enable the PC to be incremented in the next clock cycle."),
+    ("pc_w_en", "Enable the PC to be written in the next cycle"),
     ("mar_w_en", "Enable the MAR (memory address register) to be written in the next clock cycle."),
     # todo: maybe rename to reg_w_en
     ("reg_rw", "Enable the register file to be written in the next clock cycle."),
@@ -31,6 +31,8 @@ SUPPORTED_SIGNALS = [
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
+    # jumps
+    ("jump_ok", "Enable a jump to be taken, and the PC data in to be the jump immediate"),
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
@@ -49,7 +51,7 @@ class MicroInstruction:
 _ = MicroInstruction
 
 program = [
-    _(["mar_w_en", "pc_inc"], label="fetch"),
+    _(["mar_w_en", "pc_w_en"], label="fetch"),
     _(["ir_w_en"], goto="decision"),
 
     # mov r, r
@@ -84,6 +86,9 @@ program = [
     _(["reg_to_mdr", "mdr_w_en"]),  # write data register into MDR
     _(["dmem_w_en"]),  # just let the mdr value propagate to out
     _(["dmem_w_en"], goto="fetch"),  # write memory
+
+    # jump taken. This can be used for the unconditional jump, or the control unit to send conditional jumps here
+    _(["jump_ok", "pc_w_en"], goto="fetch", label="jump_taken"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

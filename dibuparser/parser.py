@@ -58,6 +58,7 @@ class OperandType(Enum):
     REGISTER = "reg"
     IMMEDIATE = "imm"
     MEM_REGISTER = "mem_reg"
+    LABEL = "label"
     MEM_IMMEDIATE = "mem_imm"
 
 
@@ -77,6 +78,12 @@ class Instruction:
 class Program:
     instructions: List[Instruction]
     labels: Dict[str, int]
+
+    def resolve_label(self, label: str) -> int:
+        try:
+            return self.labels[label]
+        except KeyError:
+            raise ValueError("unknown label %s" % (label))
 
 
 class CodeLineVisitor(Visitor):
@@ -100,6 +107,12 @@ class CodeLineVisitor(Visitor):
         parsed_immediate_value = self.parse_immediate(value)
         self._operands.append(
             (OperandType.IMMEDIATE, parsed_immediate_value)
+        )
+
+    def label_operand(self, lbl: Tree):
+        value: Tree = lbl.children[0]
+        self._operands.append(
+            (OperandType.LABEL, value)
         )
 
     def parse_immediate(self, value: Tree):
@@ -181,6 +194,19 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction("str", [(OT.MEM_REGISTER, dest), (OT.REGISTER, src)]):
                 result += "1001100000%s%s\n" % (asm_register(dest),
                                                 asm_register(src))
+            # JUMPS
+            case Instruction("jmp", [(OT.LABEL, target)]):
+                result += "1100000%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("je", [(OT.LABEL, target)]):
+                result += "1100100%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("jne", [(OT.LABEL, target)]):
+                result += "1101000%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("jn", [(OT.LABEL, target)]):
+                result += "1101100%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
             # HALT
             case Instruction("halt", []):
                 result += "1"*16 + '\n'
