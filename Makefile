@@ -6,3 +6,6 @@ test:
 
 test-rtl:
 	@cd rtl_tests && ./run_tests.sh
+
+gen-microprogram:
+	@python -m dibu.microprogram --output-program=rtl/microprogram_clean.mem --output-constants=rtl/signals.v

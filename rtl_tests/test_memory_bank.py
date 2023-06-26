@@ -14,9 +14,11 @@ test_bytes = [
 ]
 test_bytes = [int(b, base=16) for b in test_bytes]
 
+VERILOG_SOURCES = "tb_memory.v memory.v"
+TOPMODEL = "tb_memory"
 
 @cocotb.test()
-async def read_then_write(dut):
+async def test_read_then_write(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     dut._log.info("about to write all these bytes: %s" % (test_bytes))
@@ -47,7 +49,7 @@ async def read_then_write(dut):
 
 
 @cocotb.test()
-async def read_write_interleaved(dut):
+async def test_read_write_interleaved(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
     dut._log.info("about to write all these bytes: %s" % (test_bytes))

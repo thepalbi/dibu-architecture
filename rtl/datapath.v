@@ -3,7 +3,7 @@
 `include "constants.v"
 `include "signals.v"
 
-module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
+module datapath(clk, run, code_w_en, code_addr_in, code_in);
     input clk;
     //code_w_en: enable write to code memory
     //run: enable run processor
@@ -13,14 +13,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     input [15:0] code_in;
     // code_addr_in: code address in
     input [8:0] code_addr_in;
-    reg zero;
-    reg [15:0] big_zero;
-    output [7:0] debug;
     
     initial begin
-        zero = 0;
-        big_zero = 15'd0;
-        // program initials
         // the "macro" to dump signals
         `ifdef COCOTB_SIM
         $dumpfile ("datapath.vcd");
@@ -38,6 +32,10 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
 
     // --------------------------------------------------------------------
     // START SIGNALS MAPPING - COPY HERE generated code from microprogammer
+
+    // ir_w_en: Enable the IR register to be written
+    wire ir_w_en;
+    assign ir_w_en = signals[`s_ir_w_en];
 
     // pc_inc: Enable the PC to be incremented in the next clock cycle.
     wire pc_inc;
@@ -62,6 +60,26 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // imm_en: Enable immediate decoded from IR into data bus
     wire imm_en;
     assign imm_en = signals[`s_imm_en];
+
+    // dar_w_en: Enable write to the DAR register
+    wire dar_w_en;
+    assign dar_w_en = signals[`s_dar_w_en];
+
+    // mdr_w_en: Enable write to the MDR register
+    wire mdr_w_en;
+    assign mdr_w_en = signals[`s_mdr_w_en];
+
+    // dmem_w_en: Enable write to the data memory
+    wire dmem_w_en;
+    assign dmem_w_en = signals[`s_dmem_w_en];
+
+    // mdr_out_en: Enable MDR into data bus
+    wire mdr_out_en;
+    assign mdr_out_en = signals[`s_mdr_out_en];
+
+    // reg_to_mdr: If selected, register bank out A is selected as MDR in
+    wire reg_to_mdr;
+    assign reg_to_mdr = signals[`s_reg_to_mdr];
 
     // flags_w_en: Enable the flags register to be written in the next clock cycle.
     wire flags_w_en;
@@ -93,17 +111,82 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // code memory
     //
     
-    // ir: instruction register
-    wire [15:0] ir;
-
-    always @ (posedge clk) $display("el ir es: %h", ir);
-
+    wire [15:0] code_mem_out;
     memory_bank #(16, 9) code_mem(
         .clk(clk),
         .w_en(code_w_en),
         .addr(code_w_en ? code_addr_in : mar),
         .d_in(code_in),
+        .d_out(code_mem_out)
+    );
+
+    // ir: instruction register
+    wire [15:0] ir;
+    register #(16) ir_register(
+        .clk(clk),
+        .w_en(ir_w_en),
+        .d_in(code_mem_out),
         .d_out(ir)
+    );
+
+    always @ (posedge clk) $display("el ir es: %h", ir);
+
+    //
+    // data memory
+    //
+
+    // data address register
+    wire [9:0] dar_out;
+
+    // select the DAR data_in based on the opcode
+    // less control signals
+    reg [9:0] dar_addr_selection;
+
+    `define direct_load 5'b10000
+    `define direct_store 5'b10001
+    `define indirect_load 5'b10010
+    `define indirect_store 5'b10011
+    always @ (*) begin
+        casex (opcode)
+            `direct_load: dar_addr_selection <= immediate;
+            `direct_store: dar_addr_selection <= ir[10:3]; // immediate for memory is addr is on 10:3
+            `indirect_load: dar_addr_selection <= alu_a;
+            `indirect_store: dar_addr_selection <= alu_a;
+            // default to zero
+            default: dar_addr_selection <= 8'd0;
+        endcase
+    end
+
+    wire [9:0] dar_data_in;
+    assign dar_data_in = {2'd0, dar_addr_selection};
+
+    register #(10) dar_register(
+        .clk(clk),
+        .w_en(dar_w_en),
+        .d_in(dar_data_in),
+        .d_out(dar_out)
+    );
+
+    // memory data register
+    wire [7:0] mdr_out;
+    wire [7:0] mdr_in;
+    register mdr_register(
+        .clk(clk),
+        .w_en(mdr_w_en),
+        .d_in(mdr_in),
+        .d_out(mdr_out)
+    );
+
+    assign mdr_in = reg_to_mdr ? alu_b : data_mem_out;
+
+    wire [7:0] data_mem_out;
+    // default parameters of memory correspond to data memory
+    memory_bank data_mem(
+        .clk(clk),
+        .w_en(dmem_w_en),
+        .addr(dar_out),
+        .d_in(mdr_out),
+        .d_out(data_mem_out)
     );
 
     // immediate: immediate word-sized operand from instruction format
@@ -112,12 +195,12 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     
     wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
 
-    assign debug = alu_out;
-    
+    wire [4:0] opcode;
+    assign opcode = ir[15:11];
     // control unit
     ctrl_unit control(
         .clk(clk & run),
-        .opcode(ir[15:11]),
+        .opcode(opcode),
         .signals(signals)
     );
 
@@ -126,6 +209,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     assign data_bus = alu_out_en ? alu_out : 8'bz;
     assign data_bus = flags_en ? flags : 8'bz;
     assign data_bus = imm_en ? immediate : 8'bz;
+    assign data_bus = mdr_out_en ? mdr_out : 8'bz;
 
     // processing data path
 

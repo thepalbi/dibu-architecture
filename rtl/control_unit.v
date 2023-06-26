@@ -12,7 +12,7 @@ module ctrl_unit(clk, opcode, signals);
     output [`signals_size-1:0] signals;
 
     // todo: parametrize this por favor
-    reg [`store_word_size-1:0] store [0:31];
+    reg [`store_word_size-1:0] store [0:(2 ** `micro_addr_size)-1];
     // next_addr are the address bits from the microsintruction
     wire [`micro_addr_size-1:0] next_addr;
     // chosen next address is the output of the microsequencer block
@@ -34,7 +34,13 @@ module ctrl_unit(clk, opcode, signals);
     // load microprogram in rom
     initial begin
         $display("reading microprogram into store");
+        // if in cocotb test load from here
+        `ifdef COCOTB_SIM
         $readmemb("../rtl/microprogram_clean.mem", store);
+        `else
+        // if compiling without cocos read from current dir
+        $readmemb("./microprogram_clean.mem", store);
+        `endif
         current = 'd0;
     end
 
@@ -51,6 +57,14 @@ module ctrl_unit(clk, opcode, signals);
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
                 // movf
                 5'b01011: chosen_next_addr <= `micro_addr_size'd7;
+                // load indirect
+                5'b10010: chosen_next_addr <= `micro_addr_size'd8;
+                // load direct
+                5'b10000: chosen_next_addr <= `micro_addr_size'd9;
+                // store indirect
+                5'b10011: chosen_next_addr <= `micro_addr_size'd12;
+                // store direct
+                5'b10001: chosen_next_addr <= `micro_addr_size'd13;
                 default: begin
                     $display("unsupported instruction: %b", opcode);
                     // if not supported, go to fetch

@@ -128,6 +128,118 @@ async def test_movf(dut):
 
     assert dut.rbank.bank.value[5] == int("00010010", base=2)
 
+@cocotb.test()
+async def test_store_load_direct(dut):
+    test_program = """mov r3 0x13
+    str [0x15] r3
+    load r4 [0x15]
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[4] == int("0x13", base=16)
+
+@cocotb.test()
+async def test_store_load_direct(dut):
+    test_program = """mov r3 0x13
+    str [0x15] r3
+    load r4 [0x15]
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[4] == int("0x13", base=16)
+
+@cocotb.test()
+async def test_store_load_indirect(dut):
+    test_program = """mov r0 0x15
+    mov r3 0x13
+    str [r0] r3
+    load r4 [r0]
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[4] == int("0x13", base=16)
+
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:
@@ -144,7 +256,7 @@ async def wait_until_diff_ir(dut):
 
 
 async def wait_until_halt(dut):
-    clks_left = 20
+    clks_left = 100
     while clks_left > 0:
         if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
             return
