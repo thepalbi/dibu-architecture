@@ -48,10 +48,12 @@ IMM_DECI: "0d" DIGIT+
 
 EOL: "\n"
 
-NAME: ("a".."z" | "_" | "A".."Z")+
+NAME: CNAME
+
 
 COMMENT: /;[^\n]*/ 
 WHITESPACE: " "
 %ignore WHITESPACE
 
 %import common.DIGIT
+%import common.CNAME

@@ -285,6 +285,49 @@ async def test_simple_jumps_program(dut):
 
     assert dut.rbank.bank.value[3] == int("0xde", base=16)
 
+@cocotb.test()
+async def test_count_to_30(dut):
+    """
+    the program will check if two registers are equal, and jump to save a value in that case
+    """
+    test_program = """mov r0 0d30
+    mov r1 0d0
+    mov r2 0d1
+    move1: add r1 r1 r2 ; increase target register
+    sub r0 r0 r2 ; substract from counter
+    jne move1 ; equals to jnz
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut, max_clks=1000)
+
+    assert dut.rbank.bank.value[1] == 30
+
 
 async def wait_until_diff_ir(dut):
     while not dut.ir.value.is_resolvable:
@@ -300,8 +343,8 @@ async def wait_until_diff_ir(dut):
         await FallingEdge(dut.clk)
 
 
-async def wait_until_halt(dut):
-    clks_left = 100
+async def wait_until_halt(dut, max_clks = 100):
+    clks_left = max_clks
     while clks_left > 0:
         if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
             return
