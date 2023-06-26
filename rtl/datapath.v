@@ -3,7 +3,7 @@
 `include "constants.v"
 `include "signals.v"
 
-module datapath(clk, run, code_w_en, code_addr_in, code_in);
+module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     input clk;
     //code_w_en: enable write to code memory
     //run: enable run processor
@@ -13,6 +13,10 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     input [15:0] code_in;
     // code_addr_in: code address in
     input [8:0] code_addr_in;
+
+    // IO
+    input [3:0] io_in;
+    output [3:0] io_out;
     
     initial begin
         // the "macro" to dump signals
@@ -159,6 +163,26 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     // data memory
     //
 
+    //
+    // IO
+    //
+
+    wire is_io_addr, is_io_out;
+    assign is_io_out = (dar_out == 10'h3ff);
+    assign is_io_addr = (dar_out == 10'h3fe) | is_io_out;
+    
+
+    register #(4) io_out_register(
+        .clk(clk),
+        .w_en(dmem_w_en & is_io_out),
+        .d_in(mdr_out[3:0]), // mando del MDR directo porque la señal de WE de la meoria esta protegida
+        .d_out(io_out)
+    );
+
+    //
+    // END IO
+    //
+
     // data address register
     wire [9:0] dar_out;
 
@@ -193,7 +217,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
 
     // memory data register
     wire [7:0] mdr_out;
-    wire [7:0] mdr_in;
+    wire [7:0] mdr_in, mem_or_io;
     register mdr_register(
         .clk(clk),
         .w_en(mdr_w_en),
@@ -201,13 +225,15 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
         .d_out(mdr_out)
     );
 
-    assign mdr_in = reg_to_mdr ? alu_b : data_mem_out;
+
+    assign mem_or_io = is_io_addr ? {4'd0, io_in} : data_mem_out;
+    assign mdr_in = reg_to_mdr ? alu_b : mem_or_io;
 
     wire [7:0] data_mem_out;
     // default parameters of memory correspond to data memory
     memory_bank data_mem(
         .clk(clk),
-        .w_en(dmem_w_en),
+        .w_en(dmem_w_en & ~is_io_addr),
         .addr(dar_out),
         .d_in(mdr_out),
         .d_out(data_mem_out)
