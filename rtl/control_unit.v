@@ -12,7 +12,7 @@ module ctrl_unit(clk, opcode, signals);
     output [`signals_size-1:0] signals;
 
     // todo: parametrize this por favor
-    reg [`store_word_size-1:0] store [0:31];
+    reg [`store_word_size-1:0] store [0:(2 ** `micro_addr_size)-1];
     // next_addr are the address bits from the microsintruction
     wire [`micro_addr_size-1:0] next_addr;
     // chosen next address is the output of the microsequencer block

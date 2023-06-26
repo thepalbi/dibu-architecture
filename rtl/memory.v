@@ -25,7 +25,7 @@ module memory_bank #(
     output reg [word_size-1:0] d_out;
 
     // main memory bank
-    reg [word_size-1:0] bank [0:addr_size-1];
+    reg [word_size-1:0] bank [0:(2 ** addr_size)-1];
 
     assign d_out = bank[addr];
 

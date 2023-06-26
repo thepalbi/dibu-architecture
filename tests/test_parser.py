@@ -85,7 +85,7 @@ class ParserTest(unittest.TestCase):
             parse(example)
 
     def test_assemble_simple_program(self):
-        example = """mov r3 0xf0
+        example = """rodru: mov r3 0xf0
         mov r4 r3
         not r5 r4
         """

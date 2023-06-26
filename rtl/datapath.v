@@ -3,7 +3,7 @@
 `include "constants.v"
 `include "signals.v"
 
-module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
+module datapath(clk, run, code_w_en, code_addr_in, code_in);
     input clk;
     //code_w_en: enable write to code memory
     //run: enable run processor
@@ -13,14 +13,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     input [15:0] code_in;
     // code_addr_in: code address in
     input [8:0] code_addr_in;
-    reg zero;
-    reg [15:0] big_zero;
-    output [7:0] debug;
     
     initial begin
-        zero = 0;
-        big_zero = 15'd0;
-        // program initials
         // the "macro" to dump signals
         `ifdef COCOTB_SIM
         $dumpfile ("datapath.vcd");
@@ -117,6 +111,15 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     // code memory
     //
     
+    wire [15:0] code_mem_out;
+    memory_bank #(16, 9) code_mem(
+        .clk(clk),
+        .w_en(code_w_en),
+        .addr(code_w_en ? code_addr_in : mar),
+        .d_in(code_in),
+        .d_out(code_mem_out)
+    );
+
     // ir: instruction register
     wire [15:0] ir;
     register #(16) ir_register(
@@ -127,15 +130,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     );
 
     always @ (posedge clk) $display("el ir es: %h", ir);
-
-    wire [15:0] code_mem_out;
-    memory_bank #(16, 9) code_mem(
-        .clk(clk),
-        .w_en(code_w_en),
-        .addr(code_w_en ? code_addr_in : mar),
-        .d_in(code_in),
-        .d_out(code_mem_out)
-    );
 
     //
     // data memory
@@ -186,7 +180,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     assign mdr_in = reg_to_mdr ? alu_b : data_mem_out;
 
     wire [7:0] data_mem_out;
-    memory_bank #(8, 10) data_mem(
+    // default parameters of memory correspond to data memory
+    memory_bank data_mem(
         .clk(clk),
         .w_en(dmem_w_en),
         .addr(dar_out),
@@ -200,8 +195,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, debug);
     
     wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
 
-    assign debug = alu_out;
-    
     wire [4:0] opcode;
     assign opcode = ir[15:11];
     // control unit

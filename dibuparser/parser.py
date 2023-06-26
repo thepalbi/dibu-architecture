@@ -45,8 +45,7 @@ class ProgramVisitor(Visitor):
         # when visiting the label, take as the amount of seen lines one less,
         # since we've visited first the line item, and then the label
         # todo(pablo): this is not working that good
-        self._labels[l.children[0].value] = (
-            self._seen_instruction_lines - 1) * INSTRUCTION_SIZE
+        self._labels[l.children[0].value] = self._seen_instruction_lines - 1
 
     def produce_program(self):
         return Program(
@@ -173,10 +172,10 @@ def assemble(p: Program, format="binary") -> str:
                 result += "10010%s00%s000\n" % (asm_register(dest),
                                                 asm_register(src))
             # load direct
-            case Instruction("load", [(OT.REGISTER, r1), (OT.IMMEDIATE, addr)]):
+            case Instruction("load", [(OT.REGISTER, r1), (OT.MEM_IMMEDIATE, addr)]):
                 result += "10000%s%s\n" % (asm_register(r1), addr)
             # store direct
-            case Instruction("str", [(OT.IMMEDIATE, addr), (OT.REGISTER, r1)]):
+            case Instruction("str", [(OT.MEM_IMMEDIATE, addr), (OT.REGISTER, r1)]):
                 result += "10001%s%s\n" % (addr, asm_register(r1))
             # store indirect
             case Instruction("str", [(OT.MEM_REGISTER, dest), (OT.REGISTER, src)]):

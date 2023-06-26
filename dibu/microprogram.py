@@ -68,7 +68,7 @@ program = [
 
     # load r1 r2
     # since both direct and indirect load share a bunch of micro-instructions, re-use
-    _([], label="load-indirect"), # wait for ra from register bank to be read
+    _([], label="load-indirect"),  # wait for ra from register bank to be read
     # load r1 imm
     _(["dar_w_en"], label="load-direct"),  # write DAR
     _(["mdr_w_en"]),  # write output from data memory into MDR
@@ -77,11 +77,13 @@ program = [
 
     # str r1 r2
     # since both direct and indirect store share a bunch of micro-instructions, re-use
-    _([], label="store-indirect"), # wait for ra from register bank to be read
+    _([], label="store-indirect"),  # wait for ra from register bank to be read
     # str imm r1
-    _(["dar_w_en"], label="store-direct"), # load DAR and wait for data register to be read
-    _(["reg_to_mdr", "mdr_w_en"]), # write data register into MDR
-    _(["dmem_w_en"], goto="fetch"), # write memory
+    # load DAR and wait for data register to be read
+    _(["dar_w_en"], label="store-direct"),
+    _(["reg_to_mdr", "mdr_w_en"]),  # write data register into MDR
+    _(["dmem_w_en"]),  # just let the mdr value propagate to out
+    _(["dmem_w_en"], goto="fetch"),  # write memory
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")
