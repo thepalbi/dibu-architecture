@@ -27,12 +27,10 @@ module memory_bank #(
     // main memory bank
     reg [word_size-1:0] bank [0:addr_size-1];
 
-    always @ (posedge clk) begin
-        if (w_en) begin
-            bank[addr] <= d_in;
-        end else begin
-            d_out <= bank[addr];
-        end
-    end
+    assign d_out = bank[addr];
 
+    always @ (posedge clk) begin
+        if (w_en)
+            bank[addr] <= d_in;
+    end
 endmodule
