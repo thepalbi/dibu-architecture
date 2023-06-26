@@ -41,15 +41,19 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     wire pc_w_en;
     assign pc_w_en = signals[`s_pc_w_en];
 
-    // pc_ref_inc: Increment the PC reference.
+    // pc_inc: Enable the PC to be incremented in the next clock cycle.
+    wire pc_inc;
+    assign pc_inc = signals[`s_pc_inc];
+
+    // pc_ref_inc: Enable the PC reference to be incremented in the next clock cycle.
     wire pc_ref_inc;
     assign pc_ref_inc = signals[`s_pc_ref_inc];
 
-    // pc_ref_dec: Decrement the PC reference.
+    // pc_ref_dec: Enable the PC reference to be decremented in the next clock cycle.
     wire pc_ref_dec;
     assign pc_ref_dec = signals[`s_pc_ref_dec];
 
-    // pc_set: Sets PC value to pc_set_value.
+    // pc_set: Enable the PC to be set in the next clock cycle.
     wire pc_set;
     assign pc_set = signals[`s_pc_set];
 
@@ -120,17 +124,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
         .err(err)
     );
 
-    
-    //wire [8:0] pc_write_in;
-    //assign pc_write_in = pc_inc ? pc+1 : pc;
-    //wire [8:0] pc;
-    //register #(9) pc_register(
-    //    .clk(clk),
-    //    .w_en(pc_inc),
-    //    .d_in(pc_write_in),
-    //    .d_out(pc)
-    //);
-
     // mar: memory address register
     wire [8:0] mar;
     register #(9) mar_register(
@@ -145,9 +138,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     //
     
     wire [15:0] code_mem_out;
-    // ir: instruction register
-    wire [15:0] ir;
-
     //always @ (posedge clk) $display("el ir es: %h", ir);
 
     memory_bank #(16, 9) code_mem(
