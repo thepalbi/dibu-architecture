@@ -18,8 +18,10 @@ OPCODE: "mov"
     | "lsl"
     | "lsr"
     | "not"
-    | "str"
-    | "load"
+    // memory
+    | "str" | "load"
+    // jumps
+    | "jmp" | "je" | "jne" | "jn"
     | "halt"
 
 operands: operand*
