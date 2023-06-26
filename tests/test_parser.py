@@ -171,12 +171,16 @@ class ParserTest(unittest.TestCase):
 
     def test_parser_with_variables_use(self):
         example = """MODE = 0xf0
-        str [MODE] 0x0f
+        str [$MODE] 0x0f
+        mov r1 $MODE
+        halt
         """
         prog = parse(example)
         expected = Program(
             instructions=[
-                Instruction("str", [(OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")])
+                Instruction("str", [(OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")]),
+                Instruction("mov", [(OperandType.REGISTER, "r1"), (OperandType.IMMEDIATE, "11110000")]),
+                Instruction("halt", [])
             ],
             labels={},
         )

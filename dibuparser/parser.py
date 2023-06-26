@@ -86,6 +86,7 @@ class Program:
         except KeyError:
             raise ValueError("unknown label %s" % (label))
 
+
 class ImmediateFriendlyVisitor(Visitor):
     def parse_immediate(self, value: Tree):
         # todo(pablo): check maximum supported bit length in immediate and fail fast
@@ -149,6 +150,16 @@ class CodeLineVisitor(ImmediateFriendlyVisitor):
             opcode=self._opcode,
             operands=self._operands,
         )
+
+    def parse_immediate(self, value: Tree):
+        if value.data == "variable_ref":
+            try:
+                return self._resolved_vars[value.children[0].value]
+            except KeyError:
+                raise ValueError("referencing not declared variable %s" % (
+                    value.children[0].value))
+        else:
+            return super().parse_immediate(value)
 
 
 OT = OperandType
@@ -234,6 +245,7 @@ def asm_register(reg) -> str:
 with open(path.join(CURRENT_DIR, "grammar.lark"), "r") as f:
     grammar = f.read()
 _parser = Lark(grammar, start="prog")
+
 
 class VariablesVisitor(ImmediateFriendlyVisitor):
     def __init__(self) -> None:

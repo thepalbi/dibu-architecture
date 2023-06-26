@@ -32,7 +32,6 @@ operands: operand*
 ?operand: REG_NAME  -> register_operand
     | immediate     -> immediate_operand
     | NAME          -> label_operand
-    | "[" NAME "]"  -> variable_mem_operand
     | address
 
 ?address: "[" address_mode "]"
@@ -45,6 +44,7 @@ REG_NAME: "r" DIGIT
 immediate: IMM_BINARY -> binary
     | IMM_HEXA        -> hexa
     | IMM_DECI        -> decimal
+    | "$" NAME        -> variable_ref
 
 IMM_BINARY: "0b" ("0" | "1")+
 IMM_HEXA: "0x" (DIGIT | "a".."f")+
