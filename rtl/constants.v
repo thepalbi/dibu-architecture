@@ -20,3 +20,9 @@
 // defaults for dibu
 `define DATA_WORD_SIZE 8
 `define DATA_ADDR_SIZE 10
+
+// jump types
+`define JMP 3'b000
+`define JE 3'b001
+`define JNE 3'b010
+`define JN 3'b011
