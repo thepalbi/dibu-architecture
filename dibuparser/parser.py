@@ -93,7 +93,7 @@ class ImmediateFriendlyVisitor(Visitor):
         IMMEDIATE_LENGTH = 8
         match value.data:
             case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
-            case "hexa": return Bits(hex=value.children[0].value, length=IMMEDIATE_LENGTH).bin
+            case "hexa": return Bits(uint=int(value.children[0].value, base=16), length=IMMEDIATE_LENGTH).bin
             case "decimal": return Bits(int=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
             case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
 
