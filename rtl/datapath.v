@@ -168,8 +168,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     //
 
     wire is_io_addr, is_io_out;
-    assign is_io_out = (dar_out == 10'h3ff);
-    assign is_io_addr = (dar_out == 10'h3fe) | is_io_out;
+    assign is_io_out = (dar_out === `IO_OUT_ADDR);
+    assign is_io_addr = (dar_out === `IO_IN_ADDR) | is_io_out;
     
 
     register #(4) io_out_register(

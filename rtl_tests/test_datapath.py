@@ -198,10 +198,11 @@ async def test_store_load_direct(dut):
 
 @cocotb.test()
 async def test_write_from_reg_to_ioout(dut):
-    test_program = """IO_OUT_ADDR = 0x3ff
-    IO_IN_ADDR = 0x3fe
-    mov r3 0x13
+    test_program = """IO_OUT_ADDR = 0xff
+    IO_IN_ADDR = 0xfe
+    mov r3 0b00001100
     str [$IO_OUT_ADDR] r3
+    load r4 [$IO_IN_ADDR]
     halt 
     """
     test_compiled_program = assemble(parse(test_program))
@@ -226,13 +227,15 @@ async def test_write_from_reg_to_ioout(dut):
 
     dut.code_w_en.value = 0
     dut.run.value = 1
+    dut.io_in.value = BinaryValue(value="0011", n_bits=4)
 
     dut._log.info("arranco a ejecutar")
 
     # memory has been written
     await wait_until_halt(dut)
 
-    assert dut.io_out == int("0x13", base=16)
+    assert dut.io_out == int("0b1100", base=2)
+    assert dut.rbank.bank.value[4] == int("0x03", base=16)
 
 @cocotb.test()
 async def test_store_load_indirect(dut):

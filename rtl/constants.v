@@ -26,3 +26,7 @@
 `define JE 3'b001
 `define JNE 3'b010
 `define JN 3'b011
+
+// io
+`define IO_IN_ADDR 10'hfe
+`define IO_OUT_ADDR 10'hff

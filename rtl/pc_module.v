@@ -20,7 +20,7 @@ module pc_module(clk, pc_inc, pc_ref_inc, pc_ref_dec, pc_set, pc_set_value, pc_o
 
     initial
     begin    
-        for (i=0; i<8; i++) begin
+        for (i=0; i<8; i=i+1) begin
             pc_bank[i] = 9'd0;
         end
         
