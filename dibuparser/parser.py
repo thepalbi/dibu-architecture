@@ -188,12 +188,6 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.IMMEDIATE, imm)]):
                 result += "01000%s%s\n" % (asm_register(r1), imm)
 
-            case Instruction("call", [(OT.IMMEDIATE, imm)]):
-                result += "01110000%s\n" % (imm)
-
-            case Instruction("ret", []):
-                result += "0111100000000000\n"
-
             # alu involved
 
             case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
@@ -234,6 +228,12 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction("jn", [(OT.LABEL, target)]):
                 result += "1101100%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("call", [(OT.LABEL, target)]):
+                result += "1110000%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("ret", []):
+                result += "1110100000000000\n"
+
             # HALT
             case Instruction("halt", []):
                 result += "1"*16 + '\n'

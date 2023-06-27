@@ -41,10 +41,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     wire pc_w_en;
     assign pc_w_en = signals[`s_pc_w_en];
 
-    // pc_inc: Enable the PC to be incremented in the next clock cycle.
-    wire pc_inc;
-    assign pc_inc = signals[`s_pc_inc];
-
     // pc_ref_inc: Enable the PC reference to be incremented in the next clock cycle.
     wire pc_ref_inc;
     assign pc_ref_inc = signals[`s_pc_ref_inc];
@@ -115,7 +111,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     
     pc_module pc_unit(
         .clk(clk), 
-        .pc_inc(pc_inc), 
+        .pc_inc(pc_w_en), 
         .pc_ref_inc(pc_ref_inc), 
         .pc_ref_dec(pc_ref_dec), 
         .pc_set(pc_set), 
@@ -157,7 +153,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
         .d_out(ir)
     );
 
-    always @ (posedge clk) $display("el ir es: %h", ir);
+    //always @ (posedge clk) $display("PC: %h - IR: %h", pc, ir);
 
     //
     // data memory

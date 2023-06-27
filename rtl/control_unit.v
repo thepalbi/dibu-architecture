@@ -66,6 +66,10 @@ module ctrl_unit(clk, opcode, flags, signals);
                 5'b10011: chosen_next_addr <= `micro_addr_size'd12;
                 // store direct
                 5'b10001: chosen_next_addr <= `micro_addr_size'd13;
+                // call
+                5'b11100: chosen_next_addr <= `micro_addr_size'd18;
+                // ret
+                5'b11101: chosen_next_addr <= `micro_addr_size'd20;
                 // jumps logic
                 5'b11???: begin
                     // possible targets
