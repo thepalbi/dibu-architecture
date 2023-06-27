@@ -41,6 +41,18 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     wire pc_w_en;
     assign pc_w_en = signals[`s_pc_w_en];
 
+    // pc_ref_inc: Enable the PC reference to be incremented in the next clock cycle.
+    wire pc_ref_inc;
+    assign pc_ref_inc = signals[`s_pc_ref_inc];
+
+    // pc_ref_dec: Enable the PC reference to be decremented in the next clock cycle.
+    wire pc_ref_dec;
+    assign pc_ref_dec = signals[`s_pc_ref_dec];
+
+    // pc_set: Enable the PC to be set in the next clock cycle.
+    wire pc_set;
+    assign pc_set = signals[`s_pc_set];
+
     // mar_w_en: Enable the MAR (memory address register) to be written in the next clock cycle.
     wire mar_w_en;
     assign mar_w_en = signals[`s_mar_w_en];
@@ -93,15 +105,21 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     // --------------------------------------------------------------------
 
     // pc: program counter
-    wire [8:0] pc_write_in;
-    assign pc_write_in = jump_ok ? ir[8:0] : pc+1;
+
     wire [8:0] pc;
-    register #(9) pc_register(
-        .clk(clk),
-        .w_en(pc_w_en),
-        .d_in(pc_write_in),
-        .d_out(pc)
+    wire err;
+    
+    pc_module pc_unit(
+        .clk(clk), 
+        .pc_inc(pc_w_en), 
+        .pc_ref_inc(pc_ref_inc), 
+        .pc_ref_dec(pc_ref_dec), 
+        .pc_set(pc_set), 
+        .pc_set_value(ir[8:0]), 
+        .pc_out(pc), 
+        .err(err)
     );
+
     // mar: memory address register
     wire [8:0] mar;
     register #(9) mar_register(
@@ -116,6 +134,8 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
     //
     
     wire [15:0] code_mem_out;
+    //always @ (posedge clk) $display("el ir es: %h", ir);
+
     memory_bank #(16, 9) code_mem(
         .clk(clk),
         .w_en(code_w_en),
@@ -133,7 +153,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in);
         .d_out(ir)
     );
 
-    always @ (posedge clk) $display("el ir es: %h", ir);
+    //always @ (posedge clk) $display("PC: %h - IR: %h", pc, ir);
 
     //
     // data memory

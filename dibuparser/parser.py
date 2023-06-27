@@ -228,6 +228,12 @@ def assemble(p: Program, format="binary") -> str:
             case Instruction("jn", [(OT.LABEL, target)]):
                 result += "1101100%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("call", [(OT.LABEL, target)]):
+                result += "1110000%s\n" % (
+                    Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("ret", []):
+                result += "1110100000000000\n"
+
             # HALT
             case Instruction("halt", []):
                 result += "1"*16 + '\n'
