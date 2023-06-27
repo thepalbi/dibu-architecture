@@ -370,12 +370,13 @@ async def test_count_to_30(dut):
 
 @cocotb.test()
 async def test_call_and_ret(dut):
-    test_program = """call 0x03
+    test_program = """call first
     mov r3 0x12
     halt
-    mov r4 0x23
+    first: mov r4 0x23
     ret 
     """
+
     test_compiled_program = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
@@ -409,14 +410,14 @@ async def test_call_and_ret(dut):
 
 @cocotb.test()
 async def test_multiple_call_and_ret(dut):
-    test_program = """call 0x03
+    test_program = """call first
     mov r3 0x12
     halt
-    mov r4 0x23
-    call 0x07
+    first: mov r4 0x23
+    call second
     ret
     halt
-    mov r2 0x10
+    second: mov r2 0x10
     ret 
     """
     test_compiled_program = assemble(parse(test_program))
@@ -448,7 +449,7 @@ async def test_multiple_call_and_ret(dut):
 
     assert dut.rbank.bank.value[4] == int("0x23", base=16)
     assert dut.rbank.bank.value[3] == int("0x12", base=16)
-    assert dut.rbank.bank.value[2] == int("0x10", base=16)
+    assert dut.rbank.bank.value[2] == int("0x10", base=16) 
 
 
 async def wait_until_halt(dut, max_clks = 100):
@@ -460,7 +461,6 @@ async def wait_until_halt(dut, max_clks = 100):
             raise Exception("clks timed out waiting for halt")
         clks_left-=1
         await FallingEdge(dut.clk)
-
 
 
 async def wait_until_diff_ir(dut):
