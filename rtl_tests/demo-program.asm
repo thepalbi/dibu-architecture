@@ -1,6 +1,6 @@
 IO_OUT_ADDR = 0x0ff
 WAIT_COUNTER = 0x30
-WAIT_VALUE = 0d10
+WAIT_VALUE = 0d1
 ; r1 contains the literal 1
 mov r0 0d0
 mov r1 0d1
@@ -28,7 +28,7 @@ mov r7 $WAIT_VALUE
 str [$WAIT_COUNTER] r7
 call Wait
 ; check if we've reached the left end
-sub r7 r2 r3
+cmp r2 r3
 jne ShiftLeft
 ; now we know we've reached the left end
 ShiftRight: lsr r2 r2 r1
@@ -38,7 +38,7 @@ mov r7 $WAIT_VALUE
 str [$WAIT_COUNTER] r7
 call Wait
 ; check if we've reached the right end
-sub r7 r2 r1
+cmp r2 r1
 jne ShiftRight
 ; now we know we've reached the right end
 jmp ShiftLeft
@@ -57,6 +57,6 @@ mov r7 r7 ; nop
 mov r7 r7 ; nop
 mov r7 r7 ; nop
 mov r7 r7 ; nop
-sub r7 r7 r0 ; substract zero to check equality
+cmp r7 r0 ; substract zero to check equality
 jne WaitLoop
 ret
