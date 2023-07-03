@@ -98,6 +98,10 @@ program = [
     # ret
     _(["pc_ref_dec"], goto="fetch", label="ret"),
 
+    # cmp
+    _([], label="cmp"),
+    _(["flags_w_en"], goto="fetch"),
+
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")
 ]

@@ -282,7 +282,7 @@ async def test_simple_jumps_program(dut):
     """
     test_program = """mov r0 0x15
     mov r1 0x15
-    sub r1 r1 r0 ; this should be zero
+    cmp r1 r0 ; this should be zero
     je expected
     ; this line is reached if the jump is not taken
     mov r3 0x50
@@ -319,6 +319,8 @@ async def test_simple_jumps_program(dut):
     await wait_until_halt(dut)
 
     assert dut.rbank.bank.value[3] == int("0xde", base=16)
+    # assert cmp didn't affect register bank
+    assert dut.rbank.bank.value[1] == int("0x15", base=16)
 
 @cocotb.test()
 async def test_simple_jump_not_taken(dut):
@@ -327,7 +329,7 @@ async def test_simple_jump_not_taken(dut):
     """
     test_program = """mov r0 0x15
     mov r1 0x14
-    sub r1 r1 r0 ; this should be zero
+    cmp r1 r0 ; this should be zero
     je expected
     ; this line is reached if the jump is not taken
     mov r3 0x50
@@ -365,6 +367,8 @@ async def test_simple_jump_not_taken(dut):
     await wait_until_halt(dut)
 
     assert dut.rbank.bank.value[3] == int("0x50", base=16)
+    # assert cmp didn't affect register bank
+    assert dut.rbank.bank.value[1] == int("0x14", base=16)
 
 @cocotb.test()
 async def test_count_to_30(dut):
