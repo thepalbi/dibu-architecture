@@ -53,7 +53,7 @@ module ctrl_unit(clk, opcode, flags, signals);
                 // mov r1 r2
                 5'b00111: chosen_next_addr <= `micro_addr_size'd2;
                 // mov r1 imm
-                5'b01000: chosen_next_addr <= `micro_addr_size'd6;
+                5'b01111: chosen_next_addr <= `micro_addr_size'd6;
                 // alu operations
                 5'b00???: chosen_next_addr <= `micro_addr_size'd4;
                 // movf
