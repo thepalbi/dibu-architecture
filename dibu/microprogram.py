@@ -34,7 +34,6 @@ SUPPORTED_SIGNALS = [
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
-    # jumps
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
@@ -93,12 +92,11 @@ program = [
     _(["pc_set", "pc_w_en"], goto="fetch", label="jump_taken"),
 
     # call imm
-    _(["pc_ref_inc"]),
+    _(["pc_ref_inc"], label="call"),
     _(["pc_set"], goto="fetch"),
 
     # ret
-    _(["pc_ref_dec"]),
-    _([], goto="fetch"),
+    _(["pc_ref_dec"], goto="fetch", label="ret"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")
