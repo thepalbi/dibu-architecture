@@ -197,6 +197,47 @@ async def test_store_load_direct(dut):
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
 @cocotb.test()
+async def test_write_from_reg_to_ioout(dut):
+    test_program = """IO_OUT_ADDR = 0xff
+    IO_IN_ADDR = 0xfe
+    mov r3 0b00001100
+    str [$IO_OUT_ADDR] r3
+    load r4 [$IO_IN_ADDR]
+    halt 
+    """
+    test_compiled_program = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+    dut.io_in.value = BinaryValue(value="0011", n_bits=4)
+
+    dut._log.info("arranco a ejecutar")
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.io_out == int("0b1100", base=2)
+    assert dut.rbank.bank.value[4] == int("0x03", base=16)
+
+@cocotb.test()
 async def test_store_load_indirect(dut):
     test_program = """mov r0 0x15
     mov r3 0x13

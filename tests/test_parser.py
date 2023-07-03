@@ -101,20 +101,20 @@ class ParserTest(unittest.TestCase):
                     (OperandType.IMMEDIATE, "0"*8),
                 ]),
                 Instruction("jmp", [
-                    (OperandType.LABELOrVAR, "start"),
+                    (OperandType.LABEL, "start"),
                 ]),
                 Instruction("halt", []),
                 Instruction("jmp", [
-                    (OperandType.LABELOrVAR, "end"),
+                    (OperandType.LABEL, "end"),
                 ]),
                 Instruction("je", [
-                    (OperandType.LABELOrVAR, "end"),
+                    (OperandType.LABEL, "end"),
                 ]),
                 Instruction("jne", [
-                    (OperandType.LABELOrVAR, "end"),
+                    (OperandType.LABEL, "end"),
                 ]),
                 Instruction("jn", [
-                    (OperandType.LABELOrVAR, "end"),
+                    (OperandType.LABEL, "end"),
                 ]),
             ],
             labels={
@@ -135,7 +135,6 @@ class ParserTest(unittest.TestCase):
         """)
         assembled_program = assemble(prog)
         self.assertEqual(expected, assembled_program)
-
 
     def test_parse_error(self):
         example = """mov r1 0jd0129
@@ -168,7 +167,6 @@ class ParserTest(unittest.TestCase):
         # log the exception
         print(ctx.exception)
 
-
     def test_parser_with_variables_use(self):
         example = """MODE = 0xf0
         str [$MODE] 0x0f
@@ -178,8 +176,29 @@ class ParserTest(unittest.TestCase):
         prog = parse(example)
         expected = Program(
             instructions=[
-                Instruction("str", [(OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")]),
-                Instruction("mov", [(OperandType.REGISTER, "r1"), (OperandType.IMMEDIATE, "11110000")]),
+                Instruction("str", [
+                            (OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")]),
+                Instruction("mov", [(OperandType.REGISTER, "r1"),
+                            (OperandType.IMMEDIATE, "11110000")]),
+                Instruction("halt", [])
+            ],
+            labels={},
+        )
+        self.assertEqual(prog, expected)
+
+    def test_immediate_are_padded_to_correct_length(self):
+        example = """MODE = 0x3
+        str [$MODE] 0x0f
+        mov r1 $MODE
+        halt
+        """
+        prog = parse(example)
+        expected = Program(
+            instructions=[
+                Instruction("str", [
+                            (OperandType.MEM_IMMEDIATE, "00000011"), (OperandType.IMMEDIATE, "00001111")]),
+                Instruction("mov", [(OperandType.REGISTER, "r1"),
+                            (OperandType.IMMEDIATE, "00000011")]),
                 Instruction("halt", [])
             ],
             labels={},
