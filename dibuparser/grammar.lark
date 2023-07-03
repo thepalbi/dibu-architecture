@@ -21,6 +21,7 @@ OPCODE: "mov"
     | "lsl"
     | "lsr"
     | "not"
+    | "cmp"
     // memory
     | "str" | "load"
     // jumps
