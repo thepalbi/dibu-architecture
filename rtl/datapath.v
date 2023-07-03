@@ -101,10 +101,6 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
 
-    // jump_ok: Enable a jump to be taken, and the PC data in to be the jump immediate
-    wire jump_ok;
-    assign jump_ok = signals[`s_jump_ok];
-
     // END SIGNALS
     // --------------------------------------------------------------------
 

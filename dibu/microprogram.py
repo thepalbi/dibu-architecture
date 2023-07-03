@@ -35,8 +35,6 @@ SUPPORTED_SIGNALS = [
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
     # jumps
-    # TODO: This signal is not being used in favor of pc_set
-    ("jump_ok", "Enable a jump to be taken, and the PC data in to be the jump immediate"),
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
