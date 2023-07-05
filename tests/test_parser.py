@@ -171,6 +171,7 @@ class ParserTest(unittest.TestCase):
         example = """MODE = 0xf0
         str [$MODE] 0x0f
         mov r1 $MODE
+        mov r2 0u255
         halt
         """
         prog = parse(example)
@@ -180,6 +181,8 @@ class ParserTest(unittest.TestCase):
                             (OperandType.MEM_IMMEDIATE, "11110000"), (OperandType.IMMEDIATE, "00001111")]),
                 Instruction("mov", [(OperandType.REGISTER, "r1"),
                             (OperandType.IMMEDIATE, "11110000")]),
+                Instruction("mov", [(OperandType.REGISTER, "r2"),
+                            (OperandType.IMMEDIATE, "11111111")]),
                 Instruction("halt", [])
             ],
             labels={},

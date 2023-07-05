@@ -1,6 +1,6 @@
 IO_OUT_ADDR = 0x0ff
 WAIT_COUNTER = 0x30
-WAIT_VALUE = 0d1
+WAIT_VALUE = 0d127
 ; r1 contains the literal 1
 mov r0 0d0
 mov r1 0d1

@@ -1,3 +1,4 @@
+import argparse
 from lark import Lark, Visitor, Tree, Token, Transformer
 from dataclasses import dataclass
 from typing import List, Dict, Tuple
@@ -95,6 +96,7 @@ class ImmediateFriendlyVisitor(Visitor):
             case "binary": return Bits(bin=value.children[0].value, length=IMMEDIATE_LENGTH).bin
             case "hexa": return Bits(uint=int(value.children[0].value, base=16), length=IMMEDIATE_LENGTH).bin
             case "decimal": return Bits(int=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
+            case "uint": return Bits(uint=int(value.children[0].value[2:]), length=IMMEDIATE_LENGTH).bin
             case _: raise ValueError("unsupported immediate operand type: %s" % (value.data))
 
 
@@ -197,7 +199,7 @@ def assemble(p: Program, format="binary") -> str:
                 result += "01011%s00000000\n" % (asm_register(r1))
             case Instruction("cmp", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
                 result += "0100100000%s%s\n" % (asm_register(r1),
-                                                 asm_register(r2))
+                                                asm_register(r2))
             case Instruction("not", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
                 result += "00110%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))
@@ -287,3 +289,14 @@ def parse(text: str) -> Program:
     visitor.visit_topdown(parsed_tree)
 
     return visitor.produce_program()
+
+
+if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--file", dest="file", required=True, help="file")
+    args = parser.parse_args()
+
+    with open(args.file, "r") as f:
+        program_to_parse = f.read()
+    
+    print(assemble(parse(program_to_parse)))
