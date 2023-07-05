@@ -135,7 +135,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     
     wire [15:0] code_mem_out;
     //always @ (posedge clk) $display("el ir es: %h", ir);
-
+    `ifdef COCOTB_SIM
     memory_bank #(16, 9) code_mem(
         .clk(clk),
         .w_en(code_w_en),
@@ -143,6 +143,15 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         .d_in(code_in),
         .d_out(code_mem_out)
     );
+    `else
+    pp_memory #(16, 9) code_mem(
+        .clk(clk),
+        .w_en(code_w_en),
+        .addr(code_w_en ? code_addr_in : mar),
+        .d_in(code_in),
+        .d_out(code_mem_out)
+    );
+    `endif
 
     // ir: instruction register
     wire [15:0] ir;
