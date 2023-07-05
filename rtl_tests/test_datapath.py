@@ -498,7 +498,7 @@ async def test_multiple_call_and_ret(dut):
 
 @cocotb.test()
 async def test_demo_program(dut):
-    with open("./demo-program.asm", "r") as f:
+    with open("/home/pablo/facultad/dibu-architecture/programs/debug.s", "r") as f:
         test_program = f.read()
     test_compiled_program = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))

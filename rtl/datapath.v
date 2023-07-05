@@ -144,7 +144,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         .d_out(code_mem_out)
     );
     `else
-    pp_memory #(16, 9) code_mem(
+    pp_memory code_mem(
         .clk(clk),
         .w_en(code_w_en),
         .addr(code_w_en ? code_addr_in : mar),

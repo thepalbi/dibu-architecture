@@ -1,0 +1,6 @@
+IO_OUT_ADDR = 0x0ff
+WAIT_COUNTER = 0x30
+WAIT_VALUE = 0d127
+mov r0 0b00001000
+str [$IO_OUT_ADDR] r0
+loop: jmp loop

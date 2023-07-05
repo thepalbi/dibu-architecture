@@ -294,9 +294,12 @@ def parse(text: str) -> Program:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", dest="file", required=True, help="file")
+    parser.add_argument("--outfile", dest="outfile", required=True, help="file")
     args = parser.parse_args()
 
     with open(args.file, "r") as f:
         program_to_parse = f.read()
-    
-    print(assemble(parse(program_to_parse)))
+    compiled_program = assemble(parse(program_to_parse))
+    print(compiled_program)
+    with open(args.outfile, "w") as f:
+        f.write(compiled_program)
