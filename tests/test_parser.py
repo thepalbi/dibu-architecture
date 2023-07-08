@@ -151,6 +151,16 @@ class ParserTest(unittest.TestCase):
         assembled_program = assemble(parsed_program)
         self.assertEqual(expected, assembled_program)
 
+    def test_assemble_decimal_negative_immediate(self):
+        example = """mov r3 0d-1
+        """
+        expected = prepare_binary("""
+        0111101111111111
+        """)
+        parsed_program = parse(example)
+        assembled_program = assemble(parsed_program)
+        self.assertEqual(expected, assembled_program)
+
     def test_assemble_error(self):
         with self.assertRaises(ValueError) as ctx:
             example = """mov 0d14 0d14

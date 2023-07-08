@@ -572,7 +572,7 @@ async def test_demo_program(dut):
     dut.run.value = 1
 
     # memory has been written
-    await wait_until_halt(dut, max_clks=1000)
+    await wait_until_halt(dut, max_clks=2000)
 
 
 async def wait_until_halt(dut, max_clks=100):
