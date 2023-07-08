@@ -1,7 +1,7 @@
 import argparse
 from lark import Lark, Visitor, Tree, Token, Transformer
 from dataclasses import dataclass
-from typing import List, Dict, Tuple
+from typing import List, Dict, Tuple, Optional
 from os import path
 import logging
 from enum import Enum
@@ -26,7 +26,6 @@ CURRENT_DIR = path.dirname(path.realpath(__file__))
 class ProgramVisitor(Visitor):
     def __init__(self, resolved_vars: Dict[str, str]) -> None:
         self._resolved_vars = resolved_vars
-        self._labels = {}
         self._instructions = []
         self._comments = []
         self._seen_instruction_lines = 0
@@ -43,16 +42,9 @@ class ProgramVisitor(Visitor):
     def comment(self, c: Tree):
         self._comments.append(c.children[0].value)
 
-    def label(self, l: Tree):
-        # when visiting the label, take as the amount of seen lines one less,
-        # since we've visited first the line item, and then the label
-        # todo(pablo): this is not working that good
-        self._labels[l.children[0].value] = self._seen_instruction_lines - 1
-
     def produce_program(self):
         return Program(
             instructions=self._instructions,
-            labels=self._labels,
         )
 
 
@@ -68,6 +60,7 @@ class OperandType(Enum):
 class Instruction:
     opcode: str
     operands: List[Tuple[OperandType, any]]
+    label: Optional[str] = None
 
     def __repr__(self) -> str:
         return "%s %s" % (self.opcode, " ".join([op[1] for op in self.operands]))
@@ -79,13 +72,12 @@ class Instruction:
 @dataclass
 class Program:
     instructions: List[Instruction]
-    labels: Dict[str, int]
 
     def resolve_label(self, label: str) -> int:
-        try:
-            return self.labels[label]
-        except KeyError:
-            raise ValueError("unknown label %s" % (label))
+        for idx, instr in enumerate(self.instructions):
+            if instr.label == label:
+                return idx
+        raise ValueError("unknown label %s" % (label))
 
 
 class ImmediateFriendlyVisitor(Visitor):
@@ -104,7 +96,11 @@ class CodeLineVisitor(ImmediateFriendlyVisitor):
     def __init__(self, resolved_vars: Dict[str, str]) -> None:
         self._resolved_vars = resolved_vars
         self._operands = []
+        self._label = None
         super().__init__()
+
+    def label(self, l: Tree):
+        self._label = l.children[0].value
 
     def opcode(self, o: Tree):
         self._opcode = o.children[0].value
@@ -151,6 +147,7 @@ class CodeLineVisitor(ImmediateFriendlyVisitor):
         return Instruction(
             opcode=self._opcode,
             operands=self._operands,
+            label=self._label,
         )
 
     def parse_immediate(self, value: Tree):
@@ -176,7 +173,30 @@ opcode_alu_word_to_idx = {
 }
 
 
-def assemble(p: Program, format="binary") -> str:
+def apply_macros(p: Program, enabled: bool) -> Program:
+    some_applied = False
+    processed_program = Program(instructions=[])
+    # dreg is the discard register
+    dreg = "r7"
+    log.warning("USING MACROS, PLEASE MAKE SURE YOUR CODE DOES NOT USE r7")
+    for i in p.instructions:
+        match i:
+            case Instruction("addi", [(OT.REGISTER, reg), (OT.IMMEDIATE, imm)], lbl):
+                some_applied = True
+                processed_program.instructions = processed_program.instructions + [
+                    Instruction(
+                        "mov", [(OT.REGISTER, dreg), (OT.IMMEDIATE, imm)], lbl),
+                    Instruction(
+                        "add", [(OT.REGISTER, reg), (OT.REGISTER, reg), (OT.REGISTER, dreg)]),
+                ]
+            case i:
+                processed_program.instructions.append(i)
+    if some_applied and not enabled:
+        raise Exception("macros was applied, but option was disabled!")
+    return processed_program
+
+
+def assemble(p: Program, format="binary", macros=False) -> str:
     """
     assemble assembles a Program p into it's binary representation.
 
@@ -184,6 +204,7 @@ def assemble(p: Program, format="binary") -> str:
     :param str format: the format to encode the assembled program
     :return str: the assembled program
     """
+    p = apply_macros(p, macros)
     result = ""
     for i in p.instructions:
         match i:
@@ -294,12 +315,15 @@ def parse(text: str) -> Program:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", dest="file", required=True, help="file")
-    parser.add_argument("--outfile", dest="outfile", required=True, help="file")
+    parser.add_argument("--macros", dest="macros",
+                        required=False, default=False, help="enable macros", action="store_true")
+    parser.add_argument("--outfile", dest="outfile",
+                        required=True, help="file")
     args = parser.parse_args()
 
     with open(args.file, "r") as f:
         program_to_parse = f.read()
-    compiled_program = assemble(parse(program_to_parse))
+    compiled_program = assemble(parse(program_to_parse), macros=args.macros)
     print(compiled_program)
     with open(args.outfile, "w") as f:
         f.write(compiled_program)
