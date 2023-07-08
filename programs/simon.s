@@ -5,6 +5,9 @@ IO_OUT = 0xff
 ANSWERS = 0xc0 ; from here, 4 addresses for each answer until 0xc3
 EXPECTED = 0xc4
 CURRENT_CHALLENGE = 0xc5 ; two words for current challenge, easier to handle
+; immediate variables
+SHORT_WAIT_TIME = 0x2
+LONG_WAIT_TIME = 0x4
 ;       7      4  3      0
 ; 0xc5: [digit 1, digit 0]
 ;       [digit 3, digit 2]
@@ -22,8 +25,10 @@ mov r5 $CURRENT_CHALLENGE
 str [r5] r4
 addi r5 0d1
 str [r5] r3
+; call debug_signal ; debug signal
+; call display_challenge
 call debug_signal ; debug signal
-call display_challenge
+call display_wrong_answer
 call debug_signal ; debug signal
 end: jmp end
 ; -------------
@@ -71,12 +76,30 @@ lsr r5 r5 r6 ; r5 = current_challenge_1 >> 4
 str [$IO_OUT] r5 ; IO_OUT = current_challenge[3]
 call display_challenge_wait
 ret
-display_challenge_wait: mov r1 0d4 ; long wait
+display_challenge_wait: mov r1 $LONG_WAIT_TIME ; long wait
 call wait_routine
 mov r6 0x0
 str [$IO_OUT] r6 ; IO_OUT = 0
-mov r1 0d2 ; short wait displaying zero
+mov r1 $SHORT_WAIT_TIME ; short wait displaying zero
 call wait_routine
+ret
+; -------------
+; DISPLAY WRONG ANSWER ROUTINE
+; uses r6
+; -------------
+display_wrong_answer: mov r6 0x4 ; times_left = 4
+display_wrong_answer_loop: mov r7 0x0f
+str [$IO_OUT] r7 ; io_out = 1111
+mov r1 $SHORT_WAIT_TIME
+call wait_routine ; call short wait
+mov r7 0x0
+str [$IO_OUT] r7 ; io_out = 0
+mov r1 $SHORT_WAIT_TIME
+call wait_routine ; call short wait
+addi r6 0d-1 ; times_left --
+mov r7 0x0
+cmp r6 r7 ; times_left == 0
+jne display_wrong_answer_loop
 ret
 ; -------------
 ; WAIT ROUTINE
