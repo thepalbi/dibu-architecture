@@ -74,7 +74,6 @@ class ParserTest(unittest.TestCase):
                     (OperandType.MEM_REGISTER, "r1"),
                 ]),
             ],
-            labels={},
         )
         self.assertEqual(prog, expected)
 
@@ -95,7 +94,7 @@ class ParserTest(unittest.TestCase):
                 Instruction("mov", [
                     (OperandType.REGISTER, "r1"),
                     (OperandType.IMMEDIATE, "00001111"),
-                ]),
+                ], label="start"),
                 Instruction("mov", [
                     (OperandType.REGISTER, "r1"),
                     (OperandType.IMMEDIATE, "0"*8),
@@ -103,7 +102,7 @@ class ParserTest(unittest.TestCase):
                 Instruction("jmp", [
                     (OperandType.LABEL, "start"),
                 ]),
-                Instruction("halt", []),
+                Instruction("halt", [], label="end"),
                 Instruction("jmp", [
                     (OperandType.LABEL, "end"),
                 ]),
@@ -117,10 +116,6 @@ class ParserTest(unittest.TestCase):
                     (OperandType.LABEL, "end"),
                 ]),
             ],
-            labels={
-                "start": 0,
-                "end": 3,
-            },
         )
         self.assertEqual(prog, expected)
         expected = prepare_binary("""
@@ -184,7 +179,6 @@ class ParserTest(unittest.TestCase):
                             (OperandType.IMMEDIATE, "11111111")]),
                 Instruction("halt", [])
             ],
-            labels={},
         )
         self.assertEqual(prog, expected)
 
@@ -203,7 +197,6 @@ class ParserTest(unittest.TestCase):
                             (OperandType.IMMEDIATE, "00000011")]),
                 Instruction("halt", [])
             ],
-            labels={},
         )
         self.assertEqual(prog, expected)
 
@@ -212,7 +205,7 @@ class ParserTest(unittest.TestCase):
         halt
         """
         prog = parse(example)
-        prog = apply_macros(prog)
+        prog = apply_macros(prog, True)
         expected = Program(
             instructions=[
                 Instruction("mov", [(OperandType.REGISTER, "r7"),
@@ -221,6 +214,5 @@ class ParserTest(unittest.TestCase):
                             (OperandType.REGISTER, "r3"), (OperandType.REGISTER, "r7")]),
                 Instruction("halt", [])
             ],
-            labels={},
         )
         self.assertEqual(prog, expected)
