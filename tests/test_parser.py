@@ -124,8 +124,8 @@ class ParserTest(unittest.TestCase):
         )
         self.assertEqual(prog, expected)
         expected = prepare_binary("""
-        0100000100001111
-        0100000100000000
+        0111100100001111
+        0111100100000000
         1100000000000000
         1111111111111111
         1100000000000011
@@ -147,9 +147,8 @@ class ParserTest(unittest.TestCase):
         mov r4 r3
         not r5 r4
         """
-        # todo: improve this to ignore tailing and leading whitespace, and also dedent
         expected = prepare_binary("""
-        0100001111110000
+        0111101111110000
         0011110000011000
         0011010100100000
         """)
@@ -202,6 +201,24 @@ class ParserTest(unittest.TestCase):
                             (OperandType.MEM_IMMEDIATE, "00000011"), (OperandType.IMMEDIATE, "00001111")]),
                 Instruction("mov", [(OperandType.REGISTER, "r1"),
                             (OperandType.IMMEDIATE, "00000011")]),
+                Instruction("halt", [])
+            ],
+            labels={},
+        )
+        self.assertEqual(prog, expected)
+
+    def test_macros(self):
+        example = """addi r3 0d1
+        halt
+        """
+        prog = parse(example)
+        prog = apply_macros(prog)
+        expected = Program(
+            instructions=[
+                Instruction("mov", [(OperandType.REGISTER, "r7"),
+                            (OperandType.IMMEDIATE, "00000001")]),
+                Instruction("add", [(OperandType.REGISTER, "r3"),
+                            (OperandType.REGISTER, "r3"), (OperandType.REGISTER, "r7")]),
                 Instruction("halt", [])
             ],
             labels={},
