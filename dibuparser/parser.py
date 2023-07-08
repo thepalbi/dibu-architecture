@@ -178,14 +178,14 @@ def apply_macros(p: Program, enabled: bool) -> Program:
     processed_program = Program(instructions=[])
     # dreg is the discard register
     dreg = "r7"
-    log.warn("USING MACROS, PLEASE MAKE SURE YOUR CODE DOES NOT USE r7")
+    log.warning("USING MACROS, PLEASE MAKE SURE YOUR CODE DOES NOT USE r7")
     for i in p.instructions:
         match i:
-            case Instruction("addi", [(OT.REGISTER, reg), (OT.IMMEDIATE, imm)]):
+            case Instruction("addi", [(OT.REGISTER, reg), (OT.IMMEDIATE, imm)], lbl):
                 some_applied = True
                 processed_program.instructions = processed_program.instructions + [
                     Instruction(
-                        "mov", [(OT.REGISTER, dreg), (OT.IMMEDIATE, imm)]),
+                        "mov", [(OT.REGISTER, dreg), (OT.IMMEDIATE, imm)], lbl),
                     Instruction(
                         "add", [(OT.REGISTER, reg), (OT.REGISTER, reg), (OT.REGISTER, dreg)]),
                 ]
