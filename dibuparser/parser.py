@@ -176,7 +176,30 @@ opcode_alu_word_to_idx = {
 }
 
 
-def assemble(p: Program, format="binary") -> str:
+def apply_macros(p: Program, enabled: bool) -> Program:
+    some_applied = False
+    processed_program = Program(instructions=[], labels=p.labels)
+    # dreg is the discard register
+    dreg = "r7"
+    log.warn("USING MACROS, PLEASE MAKE SURE YOUR CODE DOES NOT USE r7")
+    for i in p.instructions:
+        match i:
+            case Instruction("addi", [(OT.REGISTER, reg), (OT.IMMEDIATE, imm)]):
+                some_applied = True
+                processed_program.instructions = processed_program.instructions + [
+                    Instruction(
+                        "mov", [(OT.REGISTER, dreg), (OT.IMMEDIATE, imm)]),
+                    Instruction(
+                        "add", [(OT.REGISTER, reg), (OT.REGISTER, reg), (OT.REGISTER, dreg)]),
+                ]
+            case i:
+                processed_program.instructions.append(i)
+    if some_applied and not enabled:
+        raise Exception("macros was applied, but option was disabled!")
+    return processed_program
+
+
+def assemble(p: Program, format="binary", macros=False) -> str:
     """
     assemble assembles a Program p into it's binary representation.
 
@@ -184,6 +207,7 @@ def assemble(p: Program, format="binary") -> str:
     :param str format: the format to encode the assembled program
     :return str: the assembled program
     """
+    p = apply_macros(p, macros)
     result = ""
     for i in p.instructions:
         match i:
@@ -294,12 +318,15 @@ def parse(text: str) -> Program:
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--file", dest="file", required=True, help="file")
-    parser.add_argument("--outfile", dest="outfile", required=True, help="file")
+    parser.add_argument("--macros", dest="macros",
+                        required=False, default=False, help="enable macros", action="store_true")
+    parser.add_argument("--outfile", dest="outfile",
+                        required=True, help="file")
     args = parser.parse_args()
 
     with open(args.file, "r") as f:
         program_to_parse = f.read()
-    compiled_program = assemble(parse(program_to_parse))
+    compiled_program = assemble(parse(program_to_parse), macros=args.macros)
     print(compiled_program)
     with open(args.outfile, "w") as f:
         f.write(compiled_program)

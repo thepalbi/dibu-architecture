@@ -14,7 +14,7 @@ opcode: OPCODE
 
 OPCODE: "mov"
     | "movf"
-    | "add"
+    | "add" | "addi"
     | "sub"
     | "and"
     | "or"
