@@ -206,66 +206,71 @@ def assemble(p: Program, format="binary", macros=False) -> str:
     """
     p = apply_macros(p, macros)
     result = ""
+    debug = ""
+    PC = 0
     for i in p.instructions:
+        
         match i:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.IMMEDIATE, imm)]):
-                result += "01111%s%s\n" % (asm_register(r1), imm)
+                inst = "01111%s%s\n" % (asm_register(r1), imm)
 
             # alu involved
 
             case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "00111%s00%s000\n" % (asm_register(r1),
+                inst =  "00111%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))
             case Instruction("movf", [(OT.REGISTER, r1)]):
-                result += "01011%s00000000\n" % (asm_register(r1))
+                inst =  "01011%s00000000\n" % (asm_register(r1))
             case Instruction("cmp", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "0100100000%s%s\n" % (asm_register(r1),
+                inst =  "0100100000%s%s\n" % (asm_register(r1),
                                                 asm_register(r2))
             case Instruction("not", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
-                result += "00110%s00%s000\n" % (asm_register(r1),
+                inst =  "00110%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))
             case Instruction(alu_op, [(OT.REGISTER, r1), (OT.REGISTER, r2), (OT.REGISTER, r3)]):
-                result += "00%s%s00%s%s\n" % (Bits(uint=opcode_alu_word_to_idx[alu_op], length=3).bin,
+                inst =  "00%s%s00%s%s\n" % (Bits(uint=opcode_alu_word_to_idx[alu_op], length=3).bin,
                                               asm_register(r1), asm_register(r2), asm_register(r3))
             # load indirect
             case Instruction("load", [(OT.REGISTER, dest), (OT.MEM_REGISTER, src)]):
-                result += "10010%s00%s000\n" % (asm_register(dest),
+                inst =  "10010%s00%s000\n" % (asm_register(dest),
                                                 asm_register(src))
             # load direct
             case Instruction("load", [(OT.REGISTER, r1), (OT.MEM_IMMEDIATE, addr)]):
-                result += "10000%s%s\n" % (asm_register(r1), addr)
+                inst =  "10000%s%s\n" % (asm_register(r1), addr)
             # store direct
             case Instruction("str", [(OT.MEM_IMMEDIATE, addr), (OT.REGISTER, r1)]):
-                result += "10001%s%s\n" % (addr, asm_register(r1))
+                inst =  "10001%s%s\n" % (addr, asm_register(r1))
             # store indirect
             case Instruction("str", [(OT.MEM_REGISTER, dest), (OT.REGISTER, src)]):
-                result += "1001100000%s%s\n" % (asm_register(dest),
+                inst =  "1001100000%s%s\n" % (asm_register(dest),
                                                 asm_register(src))
             # JUMPS
             case Instruction("jmp", [(OT.LABEL, target)]):
-                result += "1100000%s\n" % (
+                inst =  "1100000%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
             case Instruction("je", [(OT.LABEL, target)]):
-                result += "1100100%s\n" % (
+                inst =  "1100100%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
             case Instruction("jne", [(OT.LABEL, target)]):
-                result += "1101000%s\n" % (
+                inst =  "1101000%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
             case Instruction("jn", [(OT.LABEL, target)]):
-                result += "1101100%s\n" % (
+                inst =  "1101100%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
             case Instruction("call", [(OT.LABEL, target)]):
-                result += "1110000%s\n" % (
+                inst =  "1110000%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
             case Instruction("ret", []):
-                result += "1110100000000000\n"
+                inst =  "1110100000000000\n"
 
             # HALT
             case Instruction("halt", []):
-                result += "1"*16 + '\n'
+                inst =  "1"*16 + '\n'
             case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))
-
-    return result
+        result += inst
+        debug += str(inst[0:15]) + "   |   " + str(hex(int(inst, 2))) + "   |   " + str(i) +  "     |   " + str(hex(PC))+"\n"
+        PC += 1
+    return result, debug
 
 
 def asm_register(reg) -> str:
@@ -323,7 +328,9 @@ if __name__ == "__main__":
 
     with open(args.file, "r") as f:
         program_to_parse = f.read()
-    compiled_program = assemble(parse(program_to_parse), macros=args.macros)
+    compiled_program, debug = assemble(parse(program_to_parse), macros=args.macros)
     print(compiled_program)
     with open(args.outfile, "w") as f:
         f.write(compiled_program)
+    with open(args.outfile + "_debug", "w") as f:
+        f.write(debug)

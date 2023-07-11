@@ -2,7 +2,7 @@
 set -eufo pipefail
 
 # tests=$(find . -name "test_*.py")
-tests="./test_datapath.py"
+tests="./test_simon.py"
 
 for test in $tests; do
     echo "RUNNING TEST MODULE: $test"
