@@ -21,7 +21,7 @@ jmp generate
 ; -------------
 generate: mov r2 0x01 ; generate random not random
 mov r4 $EXPECTED ; load memory pos from expected
-add r4 r4 r0 ; add iteration offset
+add r4 r4 r1 ; add iteration offset
 str [r4] r2; store rand value in memory offset
 addi r1 0d1 ; increment iteration
 jmp show
@@ -48,7 +48,7 @@ mov r0 0x00  ; init actual_pos
 input_loop: cmp r0 r1 ; compare actual_pos and iteration
 je check_answers ; if equal then check answers
 call wait_for_input ; wait for user input
-str [r5] r4 ; use the value from r4 as input
+str [r5] r6 ; use the value from r4 as input
 addi r5 0d1 ; increment pointer to answer
 addi r0 0d1 ; increment actual_pos
 jmp input_loop
@@ -92,32 +92,41 @@ jmp main
 ; DISPLAY WRONG ANSWER ROUTINE
 ; uses r6
 ; -------------
-display_wrong_answer: mov r6 0x4 ; times_left = 4
-display_wrong_answer_loop: mov r7 0x0f
+display_wrong_answer: mov r7 0x0f
 str [$IO_OUT] r7 ; io_out = 1111
-mov r1 $SHORT_WAIT_TIME
 call wait_routine ; call short wait
 mov r7 0x0
 str [$IO_OUT] r7 ; io_out = 0
-mov r1 $SHORT_WAIT_TIME
 call wait_routine ; call short wait
-addi r6 0d-1 ; times_left --
-mov r7 0x0
-cmp r6 r7 ; times_left == 0
-jne display_wrong_answer_loop
 ret
 ; -------------
 ; WAIT ROUTINE
 ; takes r1 wait iterations
 ; -------------
-wait_routine: mov r7 r7; nop
+wait_routine: mov r6 0u255
+mov r7 0d0
+wait_loop: mov r7 r7; nop
 mov r7 r7; nop
 mov r7 r7; nop
 mov r7 r7; nop
-addi r1 0d-1 ; time--
-mov r7 0x0
-cmp r1 r7 ; time == 0
-jne wait_routine
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+addi r7 0d1 ; time--
+cmp r6 r7 ; time == 0
+jne wait_loop
 ret
 debug_signal: mov r7 0x0d
 str [$IO_OUT] r7 ; IO_OUT = de for debug
