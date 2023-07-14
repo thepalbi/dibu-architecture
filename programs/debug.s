@@ -1,6 +1,33 @@
-IO_OUT_ADDR = 0x0ff
-WAIT_COUNTER = 0x30
-WAIT_VALUE = 0d127
-mov r0 0b00001000
+IO_OUT_ADDR = 0xff
+again: mov r0 0b00001010
 str [$IO_OUT_ADDR] r0
-loop: jmp loop
+call wait_routine
+mov r0 0b00000101
+str [$IO_OUT_ADDR] r0
+call wait_routine
+jmp again
+wait_routine: mov r6 0u10
+mov r7 0d0
+wait_loop: mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+mov r7 r7; nop
+addi r7 0d1 ; time--
+cmp r6 r7 ; time == 0
+jne wait_loop
+ret
