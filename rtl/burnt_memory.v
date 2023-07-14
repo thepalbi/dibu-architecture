@@ -27,7 +27,7 @@ module pp_memory (
     reg [15:0] bank [0:1023];
     
     initial begin
-        $readmemb("./shifter.mem", bank);
+        $readmemb("./debug2.mem", bank);
     end
     
     always @ (*)
