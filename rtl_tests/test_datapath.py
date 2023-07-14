@@ -16,11 +16,15 @@ TOPMODEL = "datapath"
 
 @cocotb.test()
 async def test_one_register_not(dut):
-    test_program = """mov r3 0xf0
+    test_program = """mov r0 0u4
+    mov r3 0xf0
+    lsr r5 r3 r0
     not r4 r3
+    mov r4 r4
+    mov r5 r5
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
     dut.run.value = 0
@@ -48,6 +52,7 @@ async def test_one_register_not(dut):
 
     assert dut.rbank.bank.value[3] == int("0xf0", base=16)
     assert dut.rbank.bank.value[4] == int("0x0f", base=16)
+    assert dut.rbank.bank.value[5] == int("0x0f", base=16)
 
 
 @cocotb.test()
@@ -545,18 +550,18 @@ async def test_multiple_call_and_ret(dut):
 
 @cocotb.test()
 async def test_demo_program(dut):
-    with open("/Users/pablo/Facultad/fpga/dibu-architecture/programs/simon.s", "r") as f:
+    with open("/home/pablo/facultad/dibu-architecture/rtl_tests/demo-program.asm", "r") as f:
         test_program = f.read()
-    test_compiled_program = assemble(parse(test_program), macros=True)
+    test_compiled_program, _ = assemble(parse(test_program), macros=True)
     print("programa compilado: \n%s" % (test_compiled_program))
 
     dut.run.value = 0
     dut.code_w_en.value = 0
 
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+    cocotb.start_soon(Clock(dut.clk, 8, units="ns").start())
 
     # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
+    await Timer(16, units="ns")
     await FallingEdge(dut.clk)
 
     # write program
