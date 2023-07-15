@@ -563,7 +563,7 @@ async def test_multiple_call_and_ret(dut):
 
 @cocotb.test()
 async def test_demo_program(dut):
-    with open("/home/pablo/facultad/dibu-architecture/rtl_tests/demo-program.asm", "r") as f:
+    with open("/home/pablo/facultad/dibu-architecture/programs/debug.s", "r") as f:
         test_program = f.read()
     test_compiled_program, _ = assemble(parse(test_program), macros=True)
     print("programa compilado: \n%s" % (test_compiled_program))
@@ -591,7 +591,7 @@ async def test_demo_program(dut):
     dut.run.value = 1
 
     # memory has been written
-    await wait_until_halt(dut, max_clks=2000)
+    await wait_until_halt(dut, max_clks=1000000)
 
 
 async def wait_until_halt(dut, max_clks=100):

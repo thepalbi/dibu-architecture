@@ -15,6 +15,7 @@ SUPPORTED_SIGNALS = [
     # least significant bit
     ("decision", "When enabled, means we are in the decision state of the control unit."),
     ("ir_w_en", "Enable the IR register to be written"),
+    # rename this to pc_inc
     ("pc_w_en", "Enable the PC to be written in the next cycle"),
     ("pc_ref_inc", "Enable the PC reference to be incremented in the next clock cycle."),
     ("pc_ref_dec", "Enable the PC reference to be decremented in the next clock cycle."),
@@ -89,7 +90,7 @@ program = [
     _(["dmem_w_en"], goto="fetch"),  # write memory
 
     # jump taken. This can be used for the unconditional jump, or the control unit to send conditional jumps here
-    _(["pc_set", "pc_w_en"], goto="fetch", label="jump_taken"),
+    _(["pc_set"], goto="fetch", label="jump_taken"),
 
     # call imm
     _(["pc_ref_inc"], label="call"),

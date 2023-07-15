@@ -208,7 +208,7 @@ def assemble(p: Program, format="binary", macros=False) -> str:
     result = ""
     debug = ""
     PC = 0
-    for i in p.instructions:
+    for idx, i in enumerate(p.instructions):
         
         match i:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.IMMEDIATE, imm)]):
@@ -268,7 +268,7 @@ def assemble(p: Program, format="binary", macros=False) -> str:
                 inst =  "1"*16 + '\n'
             case _: raise ValueError("unsupported instruction: %s" % (i.print_format()))
         result += inst
-        debug += str(inst[0:15]) + "   |   " + str(hex(int(inst, 2))) + "   |   " + str(i) +  "     |   " + str(hex(PC))+"\n"
+        debug += str(idx) + "\t" + str(inst[0:15]) + "   |   " + str(hex(int(inst, 2))) + "   |   " + str(i) +  "     |   " + str(hex(PC))+"\n"
         PC += 1
     return result, debug
 

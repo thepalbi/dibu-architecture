@@ -29,22 +29,22 @@ module register_bank(clk, rst, ri_a, ri_b, ri_d, rw, d, a, b);
         b = 0;
     end
 
-    always @ (posedge rst) begin
-        for (i = 0; i <= 7; i=i+1) begin
-            bank[i] <= 8'd0;
-        end
-        a <= 0;
-        b <= 0;
-    end
-
     always @ (posedge clk) begin
-        if (rw) begin
-            // write
-            bank[ri_d] <= d;
+        if (rst) begin
+            for (i = 0; i <= 7; i=i+1) begin
+                bank[i] <= 8'd0;
+            end
+            a <= 0;
+            b <= 0;
         end else begin
-            // read
-            a <= bank[ri_a];
-            b <= bank[ri_b];
+            if (rw) begin
+                // write
+                bank[ri_d] <= d;
+            end else begin
+                // read
+                a <= bank[ri_a];
+                b <= bank[ri_b];
+            end
         end
     end
 endmodule

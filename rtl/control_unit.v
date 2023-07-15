@@ -45,9 +45,6 @@ module ctrl_unit(clk, rst, opcode, flags, signals);
         current = 'd0;
     end
 
-    always @ (posedge rst) 
-        current <= 'd0;
-
     // todo(pablo): maybe extract
     // microsequencer block
     always @ (*) begin
@@ -101,7 +98,10 @@ module ctrl_unit(clk, rst, opcode, flags, signals);
 
     // sequential block
     always @ (posedge clk) begin
-        current <= store[chosen_next_addr];
-        //$display("microinstr: %h", chosen_next_addr);
+        if (rst)
+            current <= 'd0;
+        else
+            current <= store[chosen_next_addr];
+            //$display("microinstr: %h", chosen_next_addr);
     end
 endmodule
