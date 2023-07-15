@@ -2,9 +2,10 @@
 
 `include "constants.v"
 
-module pc_module(clk, pc_inc, pc_ref_inc, pc_ref_dec, pc_set, pc_set_value, pc_out, err);
+module pc_module(clk, rst, pc_inc, pc_ref_inc, pc_ref_dec, pc_set, pc_set_value, pc_out, err);
     // utility signals
     input clk;
+    input rst;
 
     input pc_inc, pc_ref_inc, pc_ref_dec, pc_set;
     input [8:0] pc_set_value;
@@ -26,6 +27,17 @@ module pc_module(clk, pc_inc, pc_ref_inc, pc_ref_dec, pc_set, pc_set_value, pc_o
         
         pc_ref = 3'd0;
         err = 0;
+    end
+
+    always @ (posedge rst) begin
+        if (rst) begin
+            for (i=0; i<8; i=i+1) begin
+                pc_bank[i] <= 9'd0;
+            end
+
+            pc_ref <= 3'd0;
+            err <= 0;
+        end
     end
 
     always @ (posedge clk) begin

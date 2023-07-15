@@ -27,7 +27,7 @@ module pp_memory (
     reg [15:0] bank [0:1023];
     
     initial begin
-        $readmemb("./debug2.mem", bank);
+        $readmemb("./debug3.mem", bank);
     end
     
     always @ (*)

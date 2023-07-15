@@ -27,6 +27,7 @@ async def test_one_register_not(dut):
     test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -62,9 +63,10 @@ async def test_two_registers_add(dut):
     add r5 r4 r3
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -100,8 +102,9 @@ async def test_addi_macro(dut):
     test: addi r3 0d2
     halt
     """
-    test_compiled_program = assemble(parse(test_program), macros=True)
+    test_compiled_program, _ = assemble(parse(test_program), macros=True)
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -136,9 +139,10 @@ async def test_movf(dut):
     movf r5
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -172,9 +176,10 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -210,9 +215,10 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -250,9 +256,10 @@ async def test_write_from_reg_to_ioout(dut):
     load r4 [$IO_IN_ADDR]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -291,9 +298,10 @@ async def test_store_load_indirect(dut):
     load r4 [r0]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -337,9 +345,10 @@ async def test_simple_jumps_program(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -385,9 +394,10 @@ async def test_simple_jump_not_taken(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 
@@ -432,9 +442,10 @@ async def test_count_to_30(dut):
     jne move1 ; equals to jnz
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -472,9 +483,10 @@ async def test_call_and_ret(dut):
     ret 
     """
 
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -516,9 +528,10 @@ async def test_multiple_call_and_ret(dut):
     second: mov r2 0x10
     ret 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 
@@ -555,6 +568,7 @@ async def test_demo_program(dut):
     test_compiled_program, _ = assemble(parse(test_program), macros=True)
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 

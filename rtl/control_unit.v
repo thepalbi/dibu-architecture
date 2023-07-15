@@ -3,9 +3,9 @@
 `include "constants.v"
 `include "signals.v"
 
-module ctrl_unit(clk, opcode, flags, signals);
+module ctrl_unit(clk, rst, opcode, flags, signals);
     // clk: clock signal
-    input clk;
+    input clk, rst;
     // opcode, which corresponds to the ir[15:11] bits
     input [4:0] opcode;
     input [7:0] flags;
@@ -44,6 +44,9 @@ module ctrl_unit(clk, opcode, flags, signals);
         `endif
         current = 'd0;
     end
+
+    always @ (posedge rst) 
+        current <= 'd0;
 
     // todo(pablo): maybe extract
     // microsequencer block
