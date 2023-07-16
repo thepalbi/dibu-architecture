@@ -27,6 +27,7 @@ OPCODE: "mov"
     // jumps
     | "jmp" | "je" | "jne" | "jn"
     | "call" | "ret"
+    | "rnd"
     | "halt"
 
 operands: operand*

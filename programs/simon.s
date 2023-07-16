@@ -18,15 +18,31 @@ LONG_WAIT_TIME = 0x4
 ; -------------
 main: mov r0 0x00 ; init actual_pos
 mov r1 0x00 ; init iteration
+mov r5 $RANDOM_VALUES ; load RANDOM VALUES pointer
+mov r2 0d1 ; load value 00000001
+str [r5] r2 ; str value in pointer position 
+addi r5 0d1
+mov r2 0d2 ; load value 00000010
+str [r5] r2
+addi r5 0d1
+mov r2 0d4 ; load value 00000100
+str [r5] r2
+addi r5 0d1
+mov r2 0d8 ; load value 00001000
+str [r5] r2
 jmp generate
 ; -------------
 ; GENERATE
 ; uses r0, r1, r2, r4
 ; -------------
-generate: mov r2 0x01 ; generate random not random
+generate: rnd r2 ; generate random
+mov r5 0d3 ; load reg with mask: 00000011
+and r2 r2 r5 ; and against random value
+mov r5 $RANDOM_VALUES ; load RANDOM VALUES pointer
+add r5 r5 r2 ; add offset of random
 mov r4 $EXPECTED ; load memory pos from expected
 add r4 r4 r1 ; add iteration offset
-str [r4] r2; store rand value in memory offset
+str [r4] r5; store rand value in memory offset
 addi r1 0d1 ; increment iteration
 jmp show
 ; -------------
@@ -183,22 +199,3 @@ mov r7 0d0
 cmp r6 r7 ; time == 0
 jne short_wait_loop
 ret
-generate_random: mov r6 $RANDOM_VALUES
-mov r7 0d1
-str [r6] r7 ; random_values[0] = 1
-addi r6 0d1
-mov r7 0d2
-str [r6] r7 ; random_values[1] = 2
-addi r6 0d1
-mov r7 0d4
-str [r6] r7 ; random_values[2] = 4
-addi r6 0d1
-mov r7 0d8
-str [r6] r7 ; random_values[3] = 8
-mov r6 $RANDOM_VALUES_LEFT_ADDR
-mov r7 4
-str [r6] r7 ; RANDOM_VALUES_LEFT = 4
-ret 
-get_random: mov r6 $RANDOM_VALUES_LEFT_ADDR
-mov r6 [r6] ; r7 = random_values_left
-addi 

@@ -257,6 +257,8 @@ def assemble(p: Program, format="binary", macros=False) -> str:
             case Instruction("jn", [(OT.LABEL, target)]):
                 inst =  "1101100%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)
+            case Instruction("rnd", [(OT.REGISTER, r1)]):
+                inst =  "11110%s00000000\n" % (asm_register(r1))
             case Instruction("call", [(OT.LABEL, target)]):
                 inst =  "1110000%s\n" % (
                     Bits(uint=p.resolve_label(target), length=9).bin)

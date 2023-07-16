@@ -35,6 +35,8 @@ SUPPORTED_SIGNALS = [
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
+    ("rnd_out_en", "Enable RND into data bus."),
+
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
@@ -102,6 +104,9 @@ program = [
     # cmp
     _([], label="cmp"),
     _(["flags_w_en"], goto="fetch"),
+
+    # rnd
+    _(["reg_rw", "rnd_out_en"], label="rnd", goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

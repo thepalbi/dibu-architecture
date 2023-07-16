@@ -101,6 +101,10 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
 
+    // rnd_out_en: Enable RND into data bus.
+    wire rnd_out_en;
+    assign rnd_out_en = signals[`s_rnd_out_en];
+
     // END SIGNALS
     // --------------------------------------------------------------------
 
@@ -255,6 +259,7 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     assign immediate = ir[7:0];
     
     wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
+    wire [7:0] rnd_out;
 
     wire [4:0] opcode;
     assign opcode = ir[15:11];
@@ -273,6 +278,7 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     assign data_bus = flags_en ? flags : 8'bz;
     assign data_bus = imm_en ? immediate : 8'bz;
     assign data_bus = mdr_out_en ? mdr_out : 8'bz;
+    assign data_bus = rnd_out_en ? alu_out : 8'bz;
 
     // processing data path
 
@@ -302,6 +308,11 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         .out(alu_out),
         .flags(alu_flags),
         .op(ir[13:11])
+    );
+
+    random rnd_unit(
+        .clk(clk),
+        .rnd_out(rnd_out)
     );
 
 endmodule
