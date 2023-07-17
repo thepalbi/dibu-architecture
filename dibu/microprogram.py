@@ -106,7 +106,8 @@ program = [
     _(["flags_w_en"], goto="fetch"),
 
     # rnd
-    _(["reg_rw", "rnd_out_en"], label="rnd", goto="fetch"),
+    _([], label="rnd"), # allow alu_a register to propagate
+    _(["reg_rw", "rnd_out_en"], goto="fetch"), # save rand unit output to register file
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

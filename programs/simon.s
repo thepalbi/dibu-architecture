@@ -40,6 +40,7 @@ mov r5 0d3 ; load reg with mask: 00000011
 and r2 r2 r5 ; and against random value
 mov r5 $RANDOM_VALUES ; load RANDOM VALUES pointer
 add r5 r5 r2 ; add offset of random
+load r5 [r5] ; r5 <= random_values[r2]
 mov r4 $EXPECTED ; load memory pos from expected
 add r4 r4 r1 ; add iteration offset
 str [r4] r5; store rand value in memory offset

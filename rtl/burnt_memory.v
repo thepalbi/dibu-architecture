@@ -27,7 +27,7 @@ module pp_memory (
     reg [15:0] bank [0:1023];
     
     initial begin
-        $readmemb("./simon.mem", bank);
+        $readmemb("./test_random.mem", bank);
     end
     
     always @ (*)

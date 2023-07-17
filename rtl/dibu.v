@@ -10,10 +10,13 @@ module dibu(clk, rst, io_in, io_out);
     input [3:0] io_in;
     output [3:0] io_out;
     
+    // disable rst in clock
+    wire no_rst;
+    pulldown(no_rst);
     wire divided_clk;
     clk_divider #(500) clk_regulator(
         .clk_in(clk),
-        .rst(rst),
+        .rst(no_rst),
         .clk_out(divided_clk)
     );
     

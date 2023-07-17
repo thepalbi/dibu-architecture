@@ -278,7 +278,7 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     assign data_bus = flags_en ? flags : 8'bz;
     assign data_bus = imm_en ? immediate : 8'bz;
     assign data_bus = mdr_out_en ? mdr_out : 8'bz;
-    assign data_bus = rnd_out_en ? alu_out : 8'bz;
+    assign data_bus = rnd_out_en ? rnd_out : 8'bz;
 
     // processing data path
 
@@ -312,6 +312,7 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
 
     random rnd_unit(
         .clk(clk),
+        .in(alu_a),
         .rnd_out(rnd_out)
     );
 
