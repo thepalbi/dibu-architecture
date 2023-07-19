@@ -249,7 +249,9 @@ async def test_store_load_direct(dut):
 
 @cocotb.test()
 async def test_write_from_reg_to_ioout(dut):
-    test_program = """IO_OUT_ADDR = 0xff
+    test_program = """ mov r0 0xc0
+    ssr r0
+    IO_OUT_ADDR = 0xff
     IO_IN_ADDR = 0xfe
     mov r3 0b00001100
     str [$IO_OUT_ADDR] r3
@@ -593,8 +595,51 @@ async def test_random(dut):
     # memory has been written
     await wait_until_halt(dut)
 
-    import pdb; pdb.set_trace()
     assert dut.rbank.bank.value[0] != int("0x0", base=16)
+
+@cocotb.test()
+async def test_ssr(dut):
+    test_program = """mov r0 0x40
+    mov r2 0d0
+    mov r1 0x1f
+    ssr r0
+    str [r2] r1
+    mov r0 0x80
+    ssr r0
+    mov r3 0xf1
+    str [r2] r3
+    halt
+    """
+    test_compiled_program, _ = assemble(parse(test_program))
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.rst.value = 0
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert int(dut.data_mem.bank.value[256]) == int("0x1f", base=16)
+    assert int(dut.data_mem.bank.value[512]) == int("0xf1", base=16)
 
 @cocotb.test()
 async def test_demo_program(dut):

@@ -3,9 +3,9 @@
 //
 
 `define micro_addr_size     5
-`define signals_size    17
+`define signals_size    18
 // +1 for the decision state bit
-`define store_word_size 23
+`define store_word_size 24
 
 
 // Enable the IR register to be written
@@ -44,17 +44,20 @@
 // Enable write to the MDR register
 `define s_mdr_w_en        11
 
+// Enable write to thhe SR register
+`define s_sr_w_en        12
+
 // Enable write to the data memory
-`define s_dmem_w_en        12
+`define s_dmem_w_en        13
 
 // Enable MDR into data bus
-`define s_mdr_out_en        13
+`define s_mdr_out_en        14
 
 // If selected, register bank out A is selected as MDR in
-`define s_reg_to_mdr        14
+`define s_reg_to_mdr        15
 
 // Enable the flags register to be written in the next clock cycle.
-`define s_flags_w_en        15
+`define s_flags_w_en        16
 
 // Enable RND into data bus.
-`define s_rnd_out_en        16
+`define s_rnd_out_en        17

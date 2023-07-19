@@ -219,6 +219,8 @@ def assemble(p: Program, format="binary", macros=False) -> str:
             case Instruction("mov", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):
                 inst =  "00111%s00%s000\n" % (asm_register(r1),
                                                 asm_register(r2))
+            case Instruction("ssr", [(OT.REGISTER, r1)]):
+                inst =  "0110000000%s000\n" % (asm_register(r1))
             case Instruction("movf", [(OT.REGISTER, r1)]):
                 inst =  "01011%s00000000\n" % (asm_register(r1))
             case Instruction("cmp", [(OT.REGISTER, r1), (OT.REGISTER, r2)]):

@@ -85,6 +85,10 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire mdr_w_en;
     assign mdr_w_en = signals[`s_mdr_w_en];
 
+    // sr_w_en: Enable write to thhe SR register
+    wire sr_w_en;
+    assign sr_w_en = signals[`s_sr_w_en];
+
     // dmem_w_en: Enable write to the data memory
     wire dmem_w_en;
     assign dmem_w_en = signals[`s_dmem_w_en];
@@ -218,8 +222,21 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         endcase
     end
 
+    wire [7:0] sr_out;
+    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
+    wire [7:0] rnd_out;
+
+    register sr_register(
+        .clk(clk),
+        .rst(rst),
+        .w_en(sr_w_en),
+        .d_in(alu_a),
+        .d_out(sr_out)
+    );
+
+    
     wire [9:0] dar_data_in;
-    assign dar_data_in = {2'd0, dar_addr_selection};
+    assign dar_data_in = {2'd0, sr_out} << 2 + dar_addr_selection;
 
     register #(10) dar_register(
         .clk(clk),
@@ -240,7 +257,6 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         .d_out(mdr_out)
     );
 
-
     assign mem_or_io = is_io_addr ? {4'd0, io_in} : data_mem_out;
     assign mdr_in = reg_to_mdr ? alu_b : mem_or_io;
 
@@ -258,9 +274,6 @@ module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire [7:0] immediate;
     assign immediate = ir[7:0];
     
-    wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
-    wire [7:0] rnd_out;
-
     wire [4:0] opcode;
     assign opcode = ir[15:11];
     // control unit

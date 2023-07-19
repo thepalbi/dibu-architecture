@@ -72,6 +72,8 @@ module ctrl_unit(clk, rst, opcode, flags, signals);
                 5'b11101: chosen_next_addr <= `micro_addr_size'd20;
                 // rnd
                 5'b11110: chosen_next_addr <= `micro_addr_size'd23;
+                // ssr
+                5'b01100: chosen_next_addr <= `micro_addr_size'd24;
                 // cmp
                 5'b01001: chosen_next_addr <= `micro_addr_size'd21;
                 // jumps logic

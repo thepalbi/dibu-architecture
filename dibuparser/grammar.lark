@@ -24,6 +24,7 @@ OPCODE: "mov"
     | "cmp"
     // memory
     | "str" | "load"
+    | "ssr"
     // jumps
     | "jmp" | "je" | "jne" | "jn"
     | "call" | "ret"
