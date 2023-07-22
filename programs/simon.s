@@ -4,6 +4,7 @@ IO_OUT = 0xff
 ; program variables
 READ_VALUE_ADDR = 0xf0
 RANDOM_VALUES_LEFT_ADDR = 0xf1
+RANDOM_SEED = 0xf2
 ; simon mem addresses
 ANSWERS = 0x20
 EXPECTED = 0x40 
@@ -30,12 +31,15 @@ str [r5] r2
 addi r5 0d1
 mov r2 0d8 ; load value 00001000
 str [r5] r2
+; load random sed
+mov r2 0xd9 ; random seed value
+str [$RANDOM_SEED] r2 ; random_seed = 0xd9
 jmp generate
 ; -------------
 ; GENERATE
 ; uses r0, r1, r2, r4
 ; -------------
-generate: rnd r2 ; generate random
+generate: call get_random ; calculate new random into r2
 mov r5 0d3 ; load reg with mask: 00000011
 and r2 r2 r5 ; and against random value
 mov r5 $RANDOM_VALUES ; load RANDOM VALUES pointer
@@ -47,6 +51,14 @@ str [r4] r5; store rand value in memory offset
 addi r1 0d1 ; increment iteration
 jmp show
 ; -------------
+; GET_RANDOM
+; returns a random in r2, only uses r2
+; -------------
+get_random: load r2 [$RANDOM_SEED]
+rnd r2 ; r2 = random(r2)
+str [$RANDOM_SEED] r2 ; save last random
+ret ; return r2
+; ------------- 
 ; SHOW
 ; uses r0, r1, r4, r5
 ; -------------
@@ -115,6 +127,7 @@ mov r1 0x0 ; reset iteration
 call display_wrong_answer
 jmp main
 check_answer_ok: call display_ok_answer
+call wait_routine ; call wait 3 times to give a pause between levels
 call wait_routine
 jmp generate
 ; -------------
@@ -132,6 +145,8 @@ addi r5 0d-1 ; counter--
 mov r7 0d0
 cmp r7 r5
 jne display_wrong_answer_loop ; if counter != 0
+mov r7 0x0
+str [$IO_OUT] r7 ; reset io out to no leds
 ret
 ; -------------
 ; display good answer
