@@ -5,12 +5,24 @@
 
 // module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
 
-module dibu(clk, io_in, io_out);
-    input clk;
+module dibu(clk, rst, io_in, io_out);
+    input clk, rst;
     input [3:0] io_in;
     output [3:0] io_out;
+    
+    // disable rst in clock
+    wire no_rst;
+    pulldown(no_rst);
+    wire divided_clk;
+    clk_divider #(500) clk_regulator(
+        .clk_in(clk),
+        .rst(no_rst),
+        .clk_out(divided_clk)
+    );
+    
     datapath d(
-        .clk(clk),
+        .clk(divided_clk),
+        .rst(rst),
         .run('d1),
         .code_w_en('d0),
         .code_addr_in('d0),

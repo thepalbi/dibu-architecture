@@ -20,8 +20,8 @@
 //////////////////////////////////////////////////////////////////////////////////
 
 
-module register #(parameter width=8) (clk, w_en, d_in, d_out);
-    input clk;
+module register #(parameter width=8) (clk, rst, w_en, d_in, d_out);
+    input clk, rst;
     // w_en: write enable
     input w_en;
     // d_in: data in, will be written in next posedge when w_en high
@@ -33,7 +33,9 @@ module register #(parameter width=8) (clk, w_en, d_in, d_out);
     initial d_out <= 0;
 
     always @ (posedge clk) begin
-        if (w_en)
+        if (rst)
+            d_out <= 'd0;
+        else if (w_en)
             d_out <= d_in;
     end
 

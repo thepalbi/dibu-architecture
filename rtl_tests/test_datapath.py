@@ -10,20 +10,24 @@ CURRENT_DIR = path.dirname(path.realpath(__file__))
 sys.path.append(path.join(CURRENT_DIR, "../"))
 from dibuparser import parse, assemble
 
-
-VERILOG_SOURCES = "datapath.v pc_module.v register.v memory.v control_unit.v register_bank.v alu.v"
+VERILOG_SOURCES = "datapath.v pc_module.v register.v memory.v control_unit.v random.v register_bank.v alu.v"
 TOPMODEL = "datapath"
 
 
 @cocotb.test()
 async def test_one_register_not(dut):
-    test_program = """mov r3 0xf0
+    test_program = """mov r0 0u4
+    mov r3 0xf0
+    lsr r5 r3 r0
     not r4 r3
+    mov r4 r4
+    mov r5 r5
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -49,6 +53,7 @@ async def test_one_register_not(dut):
 
     assert dut.rbank.bank.value[3] == int("0xf0", base=16)
     assert dut.rbank.bank.value[4] == int("0x0f", base=16)
+    assert dut.rbank.bank.value[5] == int("0x0f", base=16)
 
 
 @cocotb.test()
@@ -58,9 +63,10 @@ async def test_two_registers_add(dut):
     add r5 r4 r3
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -86,6 +92,45 @@ async def test_two_registers_add(dut):
 
     assert dut.rbank.bank.value[5] == int("0xf1", base=16)
 
+
+@cocotb.test()
+async def test_addi_macro(dut):
+    test_program = """mov r3 0xf0
+    addi r3 0d1
+    jmp test
+    halt 
+    test: addi r3 0d2
+    halt
+    """
+    test_compiled_program, _ = assemble(parse(test_program), macros=True)
+
+    dut.rst.value = 0
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(20, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    # memory has been written
+    await wait_until_halt(dut)
+
+    assert dut.rbank.bank.value[3] == int("0xf3", base=16)
+
+
 @cocotb.test()
 async def test_movf(dut):
     test_program = """mov r3 0x01
@@ -94,9 +139,10 @@ async def test_movf(dut):
     movf r5
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -122,6 +168,7 @@ async def test_movf(dut):
 
     assert dut.rbank.bank.value[5] == int("00010010", base=2)
 
+
 @cocotb.test()
 async def test_store_load_direct(dut):
     test_program = """mov r3 0x13
@@ -129,9 +176,10 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -159,6 +207,7 @@ async def test_store_load_direct(dut):
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
+
 @cocotb.test()
 async def test_store_load_direct(dut):
     test_program = """mov r3 0x13
@@ -166,9 +215,10 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -195,6 +245,7 @@ async def test_store_load_direct(dut):
     await wait_until_halt(dut)
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
+
 
 @cocotb.test()
 async def test_write_from_reg_to_ioout(dut):
@@ -205,9 +256,10 @@ async def test_write_from_reg_to_ioout(dut):
     load r4 [$IO_IN_ADDR]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -237,6 +289,7 @@ async def test_write_from_reg_to_ioout(dut):
     assert dut.io_out == int("0b1100", base=2)
     assert dut.rbank.bank.value[4] == int("0x03", base=16)
 
+
 @cocotb.test()
 async def test_store_load_indirect(dut):
     test_program = """mov r0 0x15
@@ -245,9 +298,10 @@ async def test_store_load_indirect(dut):
     load r4 [r0]
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -275,6 +329,7 @@ async def test_store_load_indirect(dut):
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
+
 @cocotb.test()
 async def test_simple_jumps_program(dut):
     """
@@ -290,9 +345,10 @@ async def test_simple_jumps_program(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -322,6 +378,7 @@ async def test_simple_jumps_program(dut):
     # assert cmp didn't affect register bank
     assert dut.rbank.bank.value[1] == int("0x15", base=16)
 
+
 @cocotb.test()
 async def test_simple_jump_not_taken(dut):
     """
@@ -337,9 +394,10 @@ async def test_simple_jump_not_taken(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 
@@ -370,6 +428,7 @@ async def test_simple_jump_not_taken(dut):
     # assert cmp didn't affect register bank
     assert dut.rbank.bank.value[1] == int("0x14", base=16)
 
+
 @cocotb.test()
 async def test_count_to_30(dut):
     """
@@ -383,9 +442,10 @@ async def test_count_to_30(dut):
     jne move1 ; equals to jnz
     halt 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -413,6 +473,7 @@ async def test_count_to_30(dut):
 
     assert dut.rbank.bank.value[1] == 30
 
+
 @cocotb.test()
 async def test_call_and_ret(dut):
     test_program = """call first
@@ -422,9 +483,10 @@ async def test_call_and_ret(dut):
     ret 
     """
 
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
@@ -453,6 +515,7 @@ async def test_call_and_ret(dut):
     assert dut.rbank.bank.value[4] == int("0x23", base=16)
     assert dut.rbank.bank.value[3] == int("0x12", base=16)
 
+
 @cocotb.test()
 async def test_multiple_call_and_ret(dut):
     test_program = """call first
@@ -465,9 +528,10 @@ async def test_multiple_call_and_ret(dut):
     second: mov r2 0x10
     ret 
     """
-    test_compiled_program = assemble(parse(test_program))
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 
@@ -494,15 +558,17 @@ async def test_multiple_call_and_ret(dut):
 
     assert dut.rbank.bank.value[4] == int("0x23", base=16)
     assert dut.rbank.bank.value[3] == int("0x12", base=16)
-    assert dut.rbank.bank.value[2] == int("0x10", base=16) 
+    assert dut.rbank.bank.value[2] == int("0x10", base=16)
 
 @cocotb.test()
-async def test_demo_program(dut):
-    with open("/home/pablo/facultad/dibu-architecture/programs/debug.s", "r") as f:
-        test_program = f.read()
-    test_compiled_program = assemble(parse(test_program))
+async def test_random(dut):
+    test_program = """rnd r0
+    halt
+    """
+    test_compiled_program, _ = assemble(parse(test_program))
     print("programa compilado: \n%s" % (test_compiled_program))
 
+    dut.rst.value = 0
     dut.run.value = 0
     dut.code_w_en.value = 0
 
@@ -525,17 +591,52 @@ async def test_demo_program(dut):
     dut.run.value = 1
 
     # memory has been written
-    await wait_until_halt(dut, max_clks=1000)
+    await wait_until_halt(dut)
+
+    import pdb; pdb.set_trace()
+    assert dut.rbank.bank.value[0] != int("0x0", base=16)
+
+@cocotb.test()
+async def test_demo_program(dut):
+    with open("/home/pablo/facultad/dibu-architecture/programs/debug.s", "r") as f:
+        test_program = f.read()
+    test_compiled_program, _ = assemble(parse(test_program), macros=True)
+    print("programa compilado: \n%s" % (test_compiled_program))
+
+    dut.rst.value = 0
+    dut.run.value = 0
+    dut.code_w_en.value = 0
+
+    cocotb.start_soon(Clock(dut.clk, 8, units="ns").start())
+
+    # wait a bit, 2 clk cycles
+    await Timer(16, units="ns")
+    await FallingEdge(dut.clk)
+
+    # write program
+    dut.code_w_en.value = 1
+    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+        dut.code_addr_in.value = i
+        dut.code_in.value = BinaryValue(l)
+        await FallingEdge(dut.clk)
+
+    # im in a falling edge, and code has been written
+
+    dut.code_w_en.value = 0
+    dut.run.value = 1
+
+    # memory has been written
+    await wait_until_halt(dut, max_clks=1000000)
 
 
-async def wait_until_halt(dut, max_clks = 100):
+async def wait_until_halt(dut, max_clks=100):
     clks_left = max_clks
     while clks_left > 0:
         if dut.ir.value.is_resolvable and dut.ir.value == BinaryValue(value=int("0xffff", base=16), n_bits=16):
             return
         if clks_left == 0:
             raise Exception("clks timed out waiting for halt")
-        clks_left-=1
+        clks_left -= 1
         await FallingEdge(dut.clk)
 
 

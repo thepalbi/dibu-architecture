@@ -3,9 +3,9 @@
 //
 
 `define micro_addr_size     5
-`define signals_size    16
+`define signals_size    17
 // +1 for the decision state bit
-`define store_word_size 22
+`define store_word_size 23
 
 
 // Enable the IR register to be written
@@ -55,3 +55,6 @@
 
 // Enable the flags register to be written in the next clock cycle.
 `define s_flags_w_en        15
+
+// Enable RND into data bus.
+`define s_rnd_out_en        16

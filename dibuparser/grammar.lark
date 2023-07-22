@@ -14,7 +14,7 @@ opcode: OPCODE
 
 OPCODE: "mov"
     | "movf"
-    | "add"
+    | "add" | "addi"
     | "sub"
     | "and"
     | "or"
@@ -27,6 +27,7 @@ OPCODE: "mov"
     // jumps
     | "jmp" | "je" | "jne" | "jn"
     | "call" | "ret"
+    | "rnd"
     | "halt"
 
 operands: operand*
@@ -51,7 +52,7 @@ immediate: IMM_BINARY -> binary
 
 IMM_BINARY: "0b" ("0" | "1")+
 IMM_HEXA: "0x" (DIGIT | "a".."f")+
-IMM_DECI: "0d" DIGIT+
+IMM_DECI: "0d" "-"? DIGIT+
 IMM_UINT: "0u" DIGIT+
 
 EOL: "\n"

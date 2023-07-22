@@ -15,6 +15,7 @@ SUPPORTED_SIGNALS = [
     # least significant bit
     ("decision", "When enabled, means we are in the decision state of the control unit."),
     ("ir_w_en", "Enable the IR register to be written"),
+    # rename this to pc_inc
     ("pc_w_en", "Enable the PC to be written in the next cycle"),
     ("pc_ref_inc", "Enable the PC reference to be incremented in the next clock cycle."),
     ("pc_ref_dec", "Enable the PC reference to be decremented in the next clock cycle."),
@@ -34,6 +35,8 @@ SUPPORTED_SIGNALS = [
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
     # other stuff
     ("flags_w_en", "Enable the flags register to be written in the next clock cycle."),
+    ("rnd_out_en", "Enable RND into data bus."),
+
     # hightest significance
 ]
 ADDR_START_BIT = len(SUPPORTED_SIGNALS)
@@ -89,7 +92,7 @@ program = [
     _(["dmem_w_en"], goto="fetch"),  # write memory
 
     # jump taken. This can be used for the unconditional jump, or the control unit to send conditional jumps here
-    _(["pc_set", "pc_w_en"], goto="fetch", label="jump_taken"),
+    _(["pc_set"], goto="fetch", label="jump_taken"),
 
     # call imm
     _(["pc_ref_inc"], label="call"),
@@ -101,6 +104,10 @@ program = [
     # cmp
     _([], label="cmp"),
     _(["flags_w_en"], goto="fetch"),
+
+    # rnd
+    _([], label="rnd"), # allow alu_a register to propagate
+    _(["reg_rw", "rnd_out_en"], goto="fetch"), # save rand unit output to register file
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

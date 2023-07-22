@@ -4,9 +4,9 @@
 // a, b are the read registers, and d is the input for writing a register.
 // Two registers can be read at the same time, but only one can be written.
 //
-module register_bank(clk, ri_a, ri_b, ri_d, rw, d, a, b);
+module register_bank(clk, rst, ri_a, ri_b, ri_d, rw, d, a, b);
     // clk is the main clock signal
-    input wire clk;
+    input wire clk, rst;
     // rw selects if the register write or read on posedge of clk.
     // rw == 0: READ
     // rw == 1: WRITE
@@ -30,13 +30,21 @@ module register_bank(clk, ri_a, ri_b, ri_d, rw, d, a, b);
     end
 
     always @ (posedge clk) begin
-        if (rw) begin
-            // write
-            bank[ri_d] <= d;
+        if (rst) begin
+            for (i = 0; i <= 7; i=i+1) begin
+                bank[i] <= 8'd0;
+            end
+            a <= 0;
+            b <= 0;
         end else begin
-            // read
-            a <= bank[ri_a];
-            b <= bank[ri_b];
+            if (rw) begin
+                // write
+                bank[ri_d] <= d;
+            end else begin
+                // read
+                a <= bank[ri_a];
+                b <= bank[ri_b];
+            end
         end
     end
 endmodule

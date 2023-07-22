@@ -3,9 +3,9 @@
 `include "constants.v"
 `include "signals.v"
 
-module ctrl_unit(clk, opcode, flags, signals);
+module ctrl_unit(clk, rst, opcode, flags, signals);
     // clk: clock signal
-    input clk;
+    input clk, rst;
     // opcode, which corresponds to the ir[15:11] bits
     input [4:0] opcode;
     input [7:0] flags;
@@ -70,6 +70,8 @@ module ctrl_unit(clk, opcode, flags, signals);
                 5'b11100: chosen_next_addr <= `micro_addr_size'd18;
                 // ret
                 5'b11101: chosen_next_addr <= `micro_addr_size'd20;
+                // rnd
+                5'b11110: chosen_next_addr <= `micro_addr_size'd23;
                 // cmp
                 5'b01001: chosen_next_addr <= `micro_addr_size'd21;
                 // jumps logic
@@ -98,7 +100,10 @@ module ctrl_unit(clk, opcode, flags, signals);
 
     // sequential block
     always @ (posedge clk) begin
-        current <= store[chosen_next_addr];
-        //$display("microinstr: %h", chosen_next_addr);
+        if (rst)
+            current <= 'd0;
+        else
+            current <= store[chosen_next_addr];
+            //$display("microinstr: %h", chosen_next_addr);
     end
 endmodule

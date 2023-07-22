@@ -3,8 +3,8 @@
 `include "constants.v"
 `include "signals.v"
 
-module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
-    input clk;
+module datapath(clk, rst, run, code_w_en, code_addr_in, code_in, io_in, io_out);
+    input clk, rst;
     //code_w_en: enable write to code memory
     //run: enable run processor
     input code_w_en;
@@ -101,6 +101,10 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire flags_w_en;
     assign flags_w_en = signals[`s_flags_w_en];
 
+    // rnd_out_en: Enable RND into data bus.
+    wire rnd_out_en;
+    assign rnd_out_en = signals[`s_rnd_out_en];
+
     // END SIGNALS
     // --------------------------------------------------------------------
 
@@ -111,6 +115,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     
     pc_module pc_unit(
         .clk(clk), 
+        .rst(rst),
         .pc_inc(pc_w_en), 
         .pc_ref_inc(pc_ref_inc), 
         .pc_ref_dec(pc_ref_dec), 
@@ -124,6 +129,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire [8:0] mar;
     register #(9) mar_register(
         .clk(clk),
+        .rst(rst),
         .w_en(mar_w_en),
         .d_in(pc),
         .d_out(mar)
@@ -157,6 +163,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire [15:0] ir;
     register #(16) ir_register(
         .clk(clk),
+        .rst(rst),
         .w_en(ir_w_en),
         .d_in(code_mem_out),
         .d_out(ir)
@@ -179,6 +186,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
 
     register #(4) io_out_register(
         .clk(clk),
+        .rst(rst),
         .w_en(dmem_w_en & is_io_out),
         .d_in(mdr_out[3:0]), // mando del MDR directo porque la señal de WE de la meoria esta protegida
         .d_out(io_out)
@@ -215,6 +223,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
 
     register #(10) dar_register(
         .clk(clk),
+        .rst(rst),
         .w_en(dar_w_en),
         .d_in(dar_data_in),
         .d_out(dar_out)
@@ -225,6 +234,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     wire [7:0] mdr_in, mem_or_io;
     register mdr_register(
         .clk(clk),
+        .rst(rst),
         .w_en(mdr_w_en),
         .d_in(mdr_in),
         .d_out(mdr_out)
@@ -249,12 +259,14 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     assign immediate = ir[7:0];
     
     wire [7:0] alu_out, alu_a, alu_b, alu_flags, flags;
+    wire [7:0] rnd_out;
 
     wire [4:0] opcode;
     assign opcode = ir[15:11];
     // control unit
     ctrl_unit control(
         .clk(clk & run),
+        .rst(rst),
         .opcode(opcode),
         .flags(flags),
         .signals(signals)
@@ -266,11 +278,13 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
     assign data_bus = flags_en ? flags : 8'bz;
     assign data_bus = imm_en ? immediate : 8'bz;
     assign data_bus = mdr_out_en ? mdr_out : 8'bz;
+    assign data_bus = rnd_out_en ? rnd_out : 8'bz;
 
     // processing data path
 
     register_bank rbank(
         .clk(clk),
+        .rst(rst),
         .ri_a(ir[5:3]),
         .ri_b(ir[2:0]),
         .ri_d(ir[10:8]),
@@ -282,6 +296,7 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
 
     register flags_register(
         .clk(clk),
+        .rst(rst),
         .w_en(flags_w_en),
         .d_in(alu_flags),
         .d_out(flags)
@@ -293,6 +308,12 @@ module datapath(clk, run, code_w_en, code_addr_in, code_in, io_in, io_out);
         .out(alu_out),
         .flags(alu_flags),
         .op(ir[13:11])
+    );
+
+    random rnd_unit(
+        .clk(clk),
+        .in(alu_a),
+        .rnd_out(rnd_out)
     );
 
 endmodule
