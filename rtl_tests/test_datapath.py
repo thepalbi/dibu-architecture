@@ -11,6 +11,7 @@ sys.path.append(path.join(CURRENT_DIR, "../"))
 from dibuparser import parse, assemble
 
 VERILOG_SOURCES = "datapath.v pc_module.v register.v memory.v control_unit.v random.v register_bank.v alu.v"
+
 TOPMODEL = "datapath"
 
 
