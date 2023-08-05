@@ -14,18 +14,8 @@ VERILOG_SOURCES = "datapath.v pc_module.v register.v memory.v control_unit.v ran
 TOPMODEL = "datapath"
 
 
-@cocotb.test()
-async def test_one_register_not(dut):
-    test_program = """mov r0 0u4
-    mov r3 0xf0
-    lsr r5 r3 r0
-    not r4 r3
-    mov r4 r4
-    mov r5 r5
-    halt 
-    """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
+async def harness(program: str, dut, enable_macros=False, max_clks=100):
+    compiled_program, _ = assemble(parse(program), macros=enable_macros)
 
     dut.rst.value = 0
     dut.run.value = 0
@@ -36,9 +26,14 @@ async def test_one_register_not(dut):
     await Timer(20, units="ns")
     await FallingEdge(dut.clk)
 
+    # reset everything
+    dut.rst.value = 1
+    await FallingEdge(dut.clk)
+    dut.rst.value = 0
+
     # write program
     dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
+    for i, l in enumerate(compiled_program.splitlines(keepends=False)):
         dut.code_addr_in.value = i
         dut.code_in.value = BinaryValue(l)
         await FallingEdge(dut.clk)
@@ -49,7 +44,20 @@ async def test_one_register_not(dut):
     dut.run.value = 1
 
     # memory has been written
-    await wait_until_halt(dut)
+    await wait_until_halt(dut, max_clks=max_clks)
+
+
+@cocotb.test()
+async def test_one_register_not(dut):
+    test_program = """mov r0 0u4
+    mov r3 0xf0
+    lsr r5 r3 r0
+    not r4 r3
+    mov r4 r4
+    mov r5 r5
+    halt 
+    """
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[3] == int("0xf0", base=16)
     assert dut.rbank.bank.value[4] == int("0x0f", base=16)
@@ -63,32 +71,7 @@ async def test_two_registers_add(dut):
     add r5 r4 r3
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[5] == int("0xf1", base=16)
 
@@ -102,31 +85,7 @@ async def test_addi_macro(dut):
     test: addi r3 0d2
     halt
     """
-    test_compiled_program, _ = assemble(parse(test_program), macros=True)
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut, enable_macros=True)
 
     assert dut.rbank.bank.value[3] == int("0xf3", base=16)
 
@@ -139,32 +98,7 @@ async def test_movf(dut):
     movf r5
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[5] == int("00010010", base=2)
 
@@ -176,34 +110,8 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
@@ -215,34 +123,8 @@ async def test_store_load_direct(dut):
     load r4 [0x15]
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
@@ -256,35 +138,11 @@ async def test_write_from_reg_to_ioout(dut):
     load r4 [$IO_IN_ADDR]
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
+    # set io_in port
     dut.io_in.value = BinaryValue(value="0011", n_bits=4)
 
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.io_out == int("0b1100", base=2)
     assert dut.rbank.bank.value[4] == int("0x03", base=16)
@@ -298,34 +156,8 @@ async def test_store_load_indirect(dut):
     load r4 [r0]
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
+    
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[4] == int("0x13", base=16)
 
@@ -345,34 +177,8 @@ async def test_simple_jumps_program(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[3] == int("0xde", base=16)
     # assert cmp didn't affect register bank
@@ -394,36 +200,9 @@ async def test_simple_jump_not_taken(dut):
     expected: mov r3 0xde
     halt
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut)
-
+    await harness(test_program, dut)
+    
     assert dut.rbank.bank.value[3] == int("0x50", base=16)
     # assert cmp didn't affect register bank
     assert dut.rbank.bank.value[1] == int("0x14", base=16)
@@ -442,34 +221,9 @@ async def test_count_to_30(dut):
     jne move1 ; equals to jnz
     halt 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut, max_clks=1000)
+    # wait for a longer max_clks since the program is larger
+    await harness(test_program, dut, max_clks=1000)
 
     assert dut.rbank.bank.value[1] == 30
 
@@ -483,35 +237,8 @@ async def test_call_and_ret(dut):
     ret 
     """
 
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    dut._log.info("arranco a ejecutar")
-
-    # memory has been written
-    await wait_until_halt(dut, max_clks=1000)
-
+    await harness(test_program, dut)
+    
     assert dut.rbank.bank.value[4] == int("0x23", base=16)
     assert dut.rbank.bank.value[3] == int("0x12", base=16)
 
@@ -528,33 +255,8 @@ async def test_multiple_call_and_ret(dut):
     second: mov r2 0x10
     ret 
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
-
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    # memory has been written
-    await wait_until_halt(dut)
+    
+    await harness(test_program, dut)
 
     assert dut.rbank.bank.value[4] == int("0x23", base=16)
     assert dut.rbank.bank.value[3] == int("0x12", base=16)
@@ -562,43 +264,18 @@ async def test_multiple_call_and_ret(dut):
 
 @cocotb.test()
 async def test_random(dut):
-    test_program = """rnd r0
+    test_program = """mov r0 0xf2 ; set seet
+    rnd r0 ; run the random function once
     halt
     """
-    test_compiled_program, _ = assemble(parse(test_program))
-    print("programa compilado: \n%s" % (test_compiled_program))
+    
+    await harness(test_program, dut)
 
-    dut.rst.value = 0
-    dut.run.value = 0
-    dut.code_w_en.value = 0
-
-    cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
-
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
-    await FallingEdge(dut.clk)
-
-    # write program
-    dut.code_w_en.value = 1
-    for i, l in enumerate(test_compiled_program.splitlines(keepends=False)):
-        dut.code_addr_in.value = i
-        dut.code_in.value = BinaryValue(l)
-        await FallingEdge(dut.clk)
-
-    # im in a falling edge, and code has been written
-
-    dut.code_w_en.value = 0
-    dut.run.value = 1
-
-    # memory has been written
-    await wait_until_halt(dut)
-
-    import pdb; pdb.set_trace()
     assert dut.rbank.bank.value[0] != int("0x0", base=16)
 
 @cocotb.test()
 async def test_demo_program(dut):
-    with open("/home/pablo/facultad/dibu-architecture/programs/debug.s", "r") as f:
+    with open("../programs/debug.s", "r") as f:
         test_program = f.read()
     test_compiled_program, _ = assemble(parse(test_program), macros=True)
     print("programa compilado: \n%s" % (test_compiled_program))
