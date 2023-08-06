@@ -22,20 +22,18 @@ sudo apt-get install gtkwave
 
 For all the commands below, first the virtual env needs to be activated by running `source env/bin/activate`. Also, all commands should be run the following from the repo root.
 
-### Assembler and parser
-
-```bash
+```
+# test parser and assembler programs
 make test
-```
 
-### RTL
-
-```
+# test rtl
 make test-rtl
 ```
 
-To run single test, go into `rtl_tests` and run:
+## Assemble a program
+
+Command should be run from repo root.
 
 ```
-TESTS=test_one_register_not ./run_tests.sh
+python -m dibuparser.parser --file programs/simon.s --outfile rtl/simon.mem --macros
 ```
