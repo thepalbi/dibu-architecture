@@ -1,6 +1,14 @@
 ## DiBU: DIgilent Based Unit
 
-DiBU is a processor designed from the grounds up, with it's own [ISA](https://www.overleaf.com/read/fgpwwyyhspns), designed to run on an FGPA board.
+DiBU is a processor designed from the grounds up, with it's own [ISA](https://www.overleaf.com/read/fgpwwyyhspns), designed to run on an FGPA board. This repo follows the following folder structure:
+
+- `constraints`: Constraint files to program DiBU into FPGAs.
+- `dibu`: Python package where some utils are located, such as the micro-program generator.
+- `dibuparser`: Python package with the parser and assembler code.
+- `programs`: Collection of programs programmed in dibu-assembler.
+- `rtl`: VHDL (Verilog) implementation of DiBU.
+- `rlt_tests`: Cocotb tests of all DiBU components, and the complete assembly of them. The most interesting test benches are in `test_datapath.py`.
+- `tests`: Python tests for the parser and assemble code.
 
 ## Installation
 
