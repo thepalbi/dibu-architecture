@@ -47,13 +47,24 @@ MICROINST_LENGHT = len(SUPPORTED_SIGNALS)+ADDRESS_BITS
 
 @dataclass
 class MicroInstruction:
+    """
+     MicroInstruction represents a micro-instruction in the dibu machine, but can also be thought
+    of as a state inside the FSM that the control unit encodes.
+    """
     signals: List[str]
     goto: Optional[str] = None
     label: Optional[str] = None
 
 
+# alias to instantiate micro-instructions more concisely
 _ = MicroInstruction
 
+# program is the definition of the whole control unit program. Each MicroInstrucion (MI)
+# in the list corresponds to one micro-instruction in the control ROM memory (hence, a memory word).
+# When burnt into the memory, the logic goes as follows:
+# - if the MI has a goto attribute defined, the MI whose label is the one defined in the attribute is used as 
+#   the next_MI address
+# - otherwise, the next MI in the list is configured as the next
 program = [
     _(["mar_w_en", "pc_w_en"], label="fetch"),
     _(["ir_w_en"], goto="decision"),
