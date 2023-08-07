@@ -30,6 +30,7 @@ SUPPORTED_SIGNALS = [
     # memory stuff
     ("dar_w_en", "Enable write to the DAR register"),
     ("mdr_w_en", "Enable write to the MDR register"),
+    ("sr_w_en", "Enable write to the SR register"),
     ("dmem_w_en", "Enable write to the data memory"),
     ("mdr_out_en", "Enable MDR into data bus"),
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
@@ -119,6 +120,9 @@ program = [
     # rnd
     _([], label="rnd"), # allow alu_a register to propagate
     _(["reg_rw", "rnd_out_en"], goto="fetch"), # save rand unit output to register file
+
+    # ssr
+    _(["sr_w_en"], label="ssr", goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

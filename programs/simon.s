@@ -12,6 +12,9 @@ RANDOM_VALUES = 0x60
 ; immediate variables
 SHORT_WAIT_TIME = 0x2
 LONG_WAIT_TIME = 0x4
+; Init SR
+mov r0 0b11000000
+ssr r0
 ; -------------
 ; main
 ; - r0 Current pos

@@ -134,6 +134,10 @@ async def test_store_load_direct(dut):
 async def test_write_from_reg_to_ioout(dut):
     test_program = """IO_OUT_ADDR = 0xff
     IO_IN_ADDR = 0xfe
+    mov r0 0b11000000
+    mov r2 0d0
+    mov r1 0x1f
+    ;ssr r0
     mov r3 0b00001100
     str [$IO_OUT_ADDR] r3
     load r4 [$IO_IN_ADDR]
@@ -145,7 +149,7 @@ async def test_write_from_reg_to_ioout(dut):
 
     await harness(test_program, dut)
 
-    assert dut.io_out == int("0b1100", base=2)
+    assert dut.io_out.value == int("0b1100", base=2)
     assert dut.rbank.bank.value[4] == int("0x03", base=16)
 
 
@@ -273,6 +277,25 @@ async def test_random(dut):
     await harness(test_program, dut)
 
     assert dut.rbank.bank.value[0] != int("0x0", base=16)
+
+@cocotb.test()
+async def test_ssr(dut):
+    test_program = """mov r0 0x40
+    mov r2 0d0
+    mov r1 0x1f
+    ssr r0
+    str [r2] r1
+    mov r0 0x80
+    ssr r0
+    mov r3 0xf1
+    str [r2] r3
+    halt
+    """
+    
+    await harness(test_program, dut)
+
+    assert int(dut.data_mem.bank.value[256]) == int("0x1f", base=16)
+    assert int(dut.data_mem.bank.value[512]) == int("0xf1", base=16)
 
 @cocotb.test()
 async def test_demo_program(dut):
