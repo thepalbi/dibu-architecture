@@ -135,9 +135,9 @@ async def test_write_from_reg_to_ioout(dut):
     test_program = """IO_OUT_ADDR = 0xff
     IO_IN_ADDR = 0xfe
     mov r0 0b11000000
+    ssr r0
     mov r2 0d0
     mov r1 0x1f
-    ;ssr r0
     mov r3 0b00001100
     str [$IO_OUT_ADDR] r3
     load r4 [$IO_IN_ADDR]
