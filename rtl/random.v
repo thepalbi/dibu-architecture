@@ -11,15 +11,6 @@ module random (clk, in, rnd_out);
 
     // d_out: data out
     output reg [7:0] rnd_out;
-
-    initial begin
-        // the "macro" to dump signals
-        `ifdef COCOTB_SIM
-        $dumpfile ("random.vcd");
-        $dumpvars (0, random);
-        #1;
-        `endif
-    end
     
     wire [7:0] shifted;
     assign shifted = in << 1;

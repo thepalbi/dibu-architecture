@@ -30,6 +30,7 @@ SUPPORTED_SIGNALS = [
     # memory stuff
     ("dar_w_en", "Enable write to the DAR register"),
     ("mdr_w_en", "Enable write to the MDR register"),
+    ("sr_w_en", "Enable write to the SR register"),
     ("dmem_w_en", "Enable write to the data memory"),
     ("mdr_out_en", "Enable MDR into data bus"),
     ("reg_to_mdr", "If selected, register bank out A is selected as MDR in"),
@@ -47,13 +48,24 @@ MICROINST_LENGHT = len(SUPPORTED_SIGNALS)+ADDRESS_BITS
 
 @dataclass
 class MicroInstruction:
+    """
+     MicroInstruction represents a micro-instruction in the dibu machine, but can also be thought
+    of as a state inside the FSM that the control unit encodes.
+    """
     signals: List[str]
     goto: Optional[str] = None
     label: Optional[str] = None
 
 
+# alias to instantiate micro-instructions more concisely
 _ = MicroInstruction
 
+# program is the definition of the whole control unit program. Each MicroInstrucion (MI)
+# in the list corresponds to one micro-instruction in the control ROM memory (hence, a memory word).
+# When burnt into the memory, the logic goes as follows:
+# - if the MI has a goto attribute defined, the MI whose label is the one defined in the attribute is used as 
+#   the next_MI address
+# - otherwise, the next MI in the list is configured as the next
 program = [
     _(["mar_w_en", "pc_w_en"], label="fetch"),
     _(["ir_w_en"], goto="decision"),
@@ -108,6 +120,9 @@ program = [
     # rnd
     _([], label="rnd"), # allow alu_a register to propagate
     _(["reg_rw", "rnd_out_en"], goto="fetch"), # save rand unit output to register file
+
+    # ssr
+    _(["sr_w_en"], label="ssr", goto="fetch"),
 
     # decision state, goto here is ignored using zero
     _(["decision"], label="decision", goto="fetch")

@@ -28,5 +28,5 @@
 `define JN 3'b011
 
 // io
-`define IO_IN_ADDR 10'hfe
-`define IO_OUT_ADDR 10'hff
+`define IO_IN_ADDR 10'h3fe
+`define IO_OUT_ADDR 10'h3ff

@@ -9,8 +9,8 @@ TOPMODEL = "pc_module"
 async def test_set_pc_to_desired_value(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
+ 
+    await reset_dut(dut)
 
     await FallingEdge(dut.clk)
     dut.pc_ref_inc.value = 1
@@ -32,8 +32,7 @@ async def test_set_pc_to_desired_value(dut):
 async def test_error_when_pc_ref_above_limit(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
+    await reset_dut(dut)
 
     await FallingEdge(dut.clk)
     dut.pc_ref.value = int("0x7", base=16)
@@ -52,8 +51,7 @@ async def test_error_when_pc_ref_above_limit(dut):
 async def test_error_when_pc_ref_below_limit(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
+    await reset_dut(dut)
 
     await FallingEdge(dut.clk)
     dut.pc_ref_dec.value = 1
@@ -65,13 +63,11 @@ async def test_error_when_pc_ref_below_limit(dut):
 
     assert dut.err.value == 1
 
-#!FIXME: test doesn't work because it's using previous dut.
 @cocotb.test()
 async def test_inc_only_increments_current_pc(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())
 
-    # wait a bit, 2 clk cycles
-    await Timer(20, units="ns")
+    await reset_dut(dut)
 
     await FallingEdge(dut.clk)
     dut.pc_ref_inc.value = 1
@@ -93,3 +89,8 @@ async def test_inc_only_increments_current_pc(dut):
     assert dut.pc_bank[1].value == int("0x2", base=16)
     assert dut.pc_bank[2].value == int("0x0", base=16)
     assert dut.err.value == 0
+
+async def reset_dut(dut):
+    dut.rst.value = 1
+    await Timer(20, units="ns")
+    dut.rst.value = 0

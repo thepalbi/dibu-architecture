@@ -128,7 +128,7 @@ class ParserTest(unittest.TestCase):
         1101000000000011
         1101100000000011
         """)
-        assembled_program = assemble(prog)
+        assembled_program, _ = assemble(prog)
         self.assertEqual(expected, assembled_program)
 
     def test_parse_error(self):
@@ -148,7 +148,7 @@ class ParserTest(unittest.TestCase):
         0011010100100000
         """)
         parsed_program = parse(example)
-        assembled_program = assemble(parsed_program)
+        assembled_program, _ = assemble(parsed_program)
         self.assertEqual(expected, assembled_program)
 
     def test_assemble_decimal_negative_immediate(self):
@@ -158,7 +158,7 @@ class ParserTest(unittest.TestCase):
         0111101111111111
         """)
         parsed_program = parse(example)
-        assembled_program = assemble(parsed_program)
+        assembled_program, _ = assemble(parsed_program)
         self.assertEqual(expected, assembled_program)
 
     def test_assemble_error(self):

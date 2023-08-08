@@ -3,6 +3,9 @@ from cocotb.triggers import Timer, FallingEdge, RisingEdge
 from cocotb.clock import Clock
 
 
+VERILOG_SOURCES = "register_bank.v"
+TOPMODEL = "register_bank"
+
 @cocotb.test()
 async def basic_register_write_read(dut):
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start())

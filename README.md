@@ -1,6 +1,14 @@
 ## DiBU: DIgilent Based Unit
 
-DiBU is a processor designed from the grounds up, with it's own [ISA](https://www.overleaf.com/read/fgpwwyyhspns), designed to run on an FGPA board.
+DiBU is a processor designed from the grounds up, with it's own [ISA](https://www.overleaf.com/read/fgpwwyyhspns), designed to run on an FGPA board. This repo follows the following folder structure:
+
+- `constraints`: Constraint files to program DiBU into FPGAs.
+- `dibu`: Python package where some utils are located, such as the micro-program generator.
+- `dibuparser`: Python package with the parser and assembler code.
+- `programs`: Collection of programs programmed in dibu-assembler.
+- `rtl`: VHDL (Verilog) implementation of DiBU.
+- `rlt_tests`: Cocotb tests of all DiBU components, and the complete assembly of them. The most interesting test benches are in `test_datapath.py`.
+- `tests`: Python tests for the parser and assemble code.
 
 ## Installation
 
@@ -22,20 +30,18 @@ sudo apt-get install gtkwave
 
 For all the commands below, first the virtual env needs to be activated by running `source env/bin/activate`. Also, all commands should be run the following from the repo root.
 
-### Assembler and parser
-
-```bash
+```
+# test parser and assembler programs
 make test
-```
 
-### RTL
-
-```
+# test rtl
 make test-rtl
 ```
 
-To run single test, go into `rtl_tests` and run:
+## Assemble a program
+
+Command should be run from repo root.
 
 ```
-TESTS=test_one_register_not ./run_tests.sh
+python -m dibuparser.parser --file programs/simon.s --outfile rtl/simon.mem --macros
 ```
