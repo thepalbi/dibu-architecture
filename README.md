@@ -10,6 +10,10 @@ DiBU is a processor designed from the grounds up, with it's own [ISA](https://ww
 - `rlt_tests`: Cocotb tests of all DiBU components, and the complete assembly of them. The most interesting test benches are in `test_datapath.py`.
 - `tests`: Python tests for the parser and assemble code.
 
+## Docs
+
+See [docs/README.md](./docs/README.md).
+
 ## Installation
 
 ```
